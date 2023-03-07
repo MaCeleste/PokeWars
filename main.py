@@ -90,15 +90,19 @@ class PC:
 
     def draw_cards(self):
         for i in range(7):
+            # Draw a rect that will represent a card in the player's hand
             card = pygame.draw.rect(screen, GREY2, [i * 160 + 40, 580, 140, 240])
             self.card_rects.append(card)
 
+            # Render text and images to be displayed on the card
             name_text = CARD_FONT.render(self.cards[i]['name'].capitalize(), True, WHITE)
             id_text = SMALL_CARD_FONT.render(f'ID: {self.cards[i]["id"]}', True, WHITE)
             height_text = SMALL_CARD_FONT.render(f'Height: {self.cards[i]["height"]}', True, WHITE)
             weight_text = SMALL_CARD_FONT.render(f'Weight: {self.cards[i]["weight"]}', True, WHITE)
             image = pygame.image.load(f'images/{self.cards[i]["image"]}').convert_alpha()
             image_resized = pygame.transform.scale(image, (140,140))
+
+            # Display text and images on card
             screen.blit(name_text, (i * 160 + 45, 585))
             screen.blit(image_resized, (i * 160 + 40, 615))
             screen.blit(id_text, (i * 160 + 45, 755))
@@ -120,7 +124,7 @@ class Deck:
             while True:
                 id = random.randint(1,898)
                 # Check if the id already exists in the deck. If it already exists, select a new id
-                if not any(d['id'] == 'id' for d in self.full_deck):
+                if not any(d['id'] == id for d in self.full_deck):
                     # Retrive data from PokeAPI for the Pokemon corresponding to the selected id
                     # Check if there is an image available for the Pokemon with the id selected
                     response = requests.get(f'https://pokeapi.co/api/v2/pokemon/{id}').json()
@@ -128,9 +132,9 @@ class Deck:
                     if os.path.isfile(image_path):
                         break
                     else:
-                        print(image_path)
                         continue
                 else:
+                    print('id already exists')
                     continue
             
             # Create a dictionary that will store Pokemon attributes
