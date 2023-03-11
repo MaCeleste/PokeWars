@@ -15,10 +15,12 @@ HEIGHT = 1000
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GREY1 = (210,210,210)
-GREY2 = (54, 54, 54)
+GREY2 = (40, 40, 40)
+GREY3 = (65, 65, 65)
 TITLES_FONT = pygame.font.Font('BarlowCondensed-Light.ttf', 25)
 CARD_FONT = pygame.font.Font('BarlowCondensed-Light.ttf', 20)
 SMALL_CARD_FONT = pygame.font.Font('BarlowCondensed-Light.ttf', 18)
+
 
 # Set caption and icon
 
@@ -58,6 +60,8 @@ class MAIN:
         self.draw_background()
         self.player.draw_cards()
         self.pc.draw_cards()
+        self.player.check_click()
+
     
     def draw_background(self):
         top_menu = pygame.draw.rect(screen, GREY2, [0, 0, WIDTH, 50])
@@ -110,6 +114,9 @@ class Player:
     def __init__(self):
         self.cards = []
         self.card_rects = []
+        self.card_clicked = False
+        
+        
     
     def draw(self, deck):
         for _ in range(7):
@@ -120,7 +127,14 @@ class Player:
         for i in range(7):
             # Draw a rect that will represent a card in the player's hand
 
-            card = pygame.draw.rect(screen, GREY2, [i * 160 + 50, 640, 140, 240], border_radius = 12)
+            card = pygame.Rect((i * 160 + 50, 640), (140, 240))
+
+            mouse_pos = pygame.mouse.get_pos()
+            if card.collidepoint(mouse_pos) and self.cards[i]['used'] == False:
+                pygame.draw.rect(screen, GREY3, card, border_radius = 12)
+            else:
+                pygame.draw.rect(screen, GREY2, card, border_radius = 12)
+
             self.card_rects.append(card)
 
             # Render text and images to be displayed on the card
@@ -137,6 +151,20 @@ class Player:
             screen.blit(id_text, (i * 160 + 55, 815))
             screen.blit(height_text, (i * 160 + 55, 835))
             screen.blit(weight_text, (i * 160 + 55, 855))
+
+    def check_click(self):
+        mouse_pos = pygame.mouse.get_pos()
+        for card in self.card_rects:
+            if card.collidepoint(mouse_pos):
+                if pygame.mouse.get_pressed()[0]:
+                    self.card_clicked = True
+                else:
+                    if self.card_clicked == True:
+                        print(self.card_rects.index(card))
+                        self.card_clicked = False
+    
+
+            
 
 class Deck:
     def __init__(self):
