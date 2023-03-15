@@ -8,19 +8,18 @@ import os.path
 
 pygame.init()
 
-# Game constants
+# Game parameters
 
 WIDTH = 1200
 HEIGHT = 1000
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-GREY1 = (210,210,210)
-GREY2 = (40, 40, 40)
-GREY3 = (65, 65, 65)
-TITLES_FONT = pygame.font.Font('BarlowCondensed-Light.ttf', 25)
-CARD_FONT = pygame.font.Font('BarlowCondensed-Light.ttf', 20)
-SMALL_CARD_FONT = pygame.font.Font('BarlowCondensed-Light.ttf', 18)
-
+black = (0, 0, 0)
+white = (255, 255, 255)
+grey1 = (210,210,210)
+grey2 = (85, 85, 85)
+grey3 = (40, 40, 40)
+titles_font = pygame.font.Font('BarlowCondensed-Light.ttf', 25)
+card_font = pygame.font.Font('BarlowCondensed-Light.ttf', 20)
+small_card_font = pygame.font.Font('BarlowCondensed-Light.ttf', 18)
 
 # Set caption and icon
 
@@ -49,6 +48,10 @@ class MAIN:
         self.player = Player()
         self.pc = PC()
         self.deal_cards()
+        self.game()
+        #self.player_card = None
+        #self.player_attribute = None
+        
     
     def deal_cards(self):
         self.player.draw(self.deck)
@@ -60,34 +63,57 @@ class MAIN:
         self.draw_background()
         self.player.draw_cards()
         self.pc.draw_cards()
-        self.player.check_click()
 
-    
     def draw_background(self):
-        top_menu = pygame.draw.rect(screen, GREY2, [0, 0, WIDTH, 50])
-        bottom_menu = pygame.draw.rect(screen, GREY2, [0, 950, WIDTH, 50])
+        top_menu = pygame.draw.rect(screen, grey3, [0, 0, WIDTH, 50])
+        bottom_menu = pygame.draw.rect(screen, grey3, [0, 950, WIDTH, 50])
 
-        pc_container = pygame.draw.rect(screen, WHITE, [15, 65, 1175, 320], width = 1)
-        pc_text = TITLES_FONT.render('PC', True, WHITE)
+        pc_container = pygame.draw.rect(screen, white, [15, 65, 1175, 320], width = 1)
+        pc_text = titles_font.render('PC', True, white)
         pc_text_rect = pc_text.get_rect(center=(WIDTH/2, 90))
         screen.blit(pc_text, pc_text_rect)
 
-        player_container = pygame.draw.rect(screen, WHITE, [15, 620, 1175, 320], width = 1)
-        player_text = TITLES_FONT.render('Player', True, WHITE)
+        player_container = pygame.draw.rect(screen, white, [15, 620, 1175, 320], width = 1)
+        player_text = titles_font.render('Player', True, white)
         player_text_rect = pc_text.get_rect(center=(WIDTH/2, 910))
         screen.blit(player_text, player_text_rect)
         
     
     def game(self):
-        #while any(d['used'] == False for d in self.player.cards):
-        player_selection = self.player_play_hand()
-        #pc_selection = self.pc_play_hand()
+        if any(d['used'] == False for d in self.player.cards):
+            self.player_play_hand()
+        else:
+            print('game over')
+        
+
         
     
     def player_play_hand(self):
-        instructions_text = TITLES_FONT.render('Your turn: select a card', True, WHITE)
-        screen.blit(instructions_text, (20, 960))
-        #return value
+        if self.player.turn_to_choose_card == True:
+            instructions_text = titles_font.render('Your turn: select a card.', True, white)
+            screen.blit(instructions_text, (20, 960))
+        
+            self.player.select_card()
+            if self.player.selected_card != None:
+                self.player.turn_to_choose_card = False
+                print(self.player.selected_card)
+                self.player.turn_to_choose_attribute = True
+        
+
+        if self.player.turn_to_choose_attribute == True:        
+            instructions_text = titles_font.render('Which attribute would your like to use? Press i for id, w for weight or h for height.', True, white)
+            screen.blit(instructions_text, (20, 960))
+
+            self.player.selected_attribute = self.player.select_attribute(self.player.selected_card)
+
+            if self.player.selected_attribute != None:
+                self.player.turn_to_choose_attribute = False
+                print(self.player.selected_attribute)
+                self.player.selected_card = None
+                self.player.selected_attribute = None
+                self.player.turn_to_choose_card = True
+                return 
+
     
     def pc_play_hand(self):
         ...
@@ -107,7 +133,7 @@ class PC:
     
     def draw_cards(self):
         for i in range(7):
-            card = pygame.draw.rect(screen, GREY2, [i * 160 + 50, 125, 140, 240], border_radius = 12)
+            card = pygame.draw.rect(screen, grey3, [i * 160 + 50, 125, 140, 240], border_radius = 12)
             self.card_rects.append(card)
 
 class Player: 
@@ -115,7 +141,10 @@ class Player:
         self.cards = []
         self.card_rects = []
         self.card_clicked = False
-        
+        self.turn_to_choose_card = True
+        self.turn_to_choose_attribute = False
+        self.selected_card = None
+        self.selected_attribute = None
         
     
     def draw(self, deck):
@@ -130,18 +159,20 @@ class Player:
             card = pygame.Rect((i * 160 + 50, 640), (140, 240))
 
             mouse_pos = pygame.mouse.get_pos()
-            if card.collidepoint(mouse_pos) and self.cards[i]['used'] == False:
-                pygame.draw.rect(screen, GREY3, card, border_radius = 12)
+            if card.collidepoint(mouse_pos) and self.turn_to_choose_card == True or self.selected_card == i:
+                pygame.draw.rect(screen, grey2, card, border_radius = 12)
+            elif self.cards[i]['used'] == True:
+                pygame.draw.rect(screen, grey2, card, border_radius = 12)
             else:
-                pygame.draw.rect(screen, GREY2, card, border_radius = 12)
+                pygame.draw.rect(screen, grey3, card, border_radius = 12)
 
             self.card_rects.append(card)
 
             # Render text and images to be displayed on the card
-            name_text = CARD_FONT.render(self.cards[i]['name'].capitalize(), True, WHITE)
-            id_text = SMALL_CARD_FONT.render(f'ID: {self.cards[i]["id"]}', True, WHITE)
-            height_text = SMALL_CARD_FONT.render(f'Height: {self.cards[i]["height"]}', True, WHITE)
-            weight_text = SMALL_CARD_FONT.render(f'Weight: {self.cards[i]["weight"]}', True, WHITE)
+            name_text = card_font.render(self.cards[i]['name'].capitalize(), True, white)
+            id_text = small_card_font.render(f'ID: {self.cards[i]["id"]}', True, white)
+            height_text = small_card_font.render(f'Height: {self.cards[i]["height"]}', True, white)
+            weight_text = small_card_font.render(f'Weight: {self.cards[i]["weight"]}', True, white)
             image = pygame.image.load(f'images/{self.cards[i]["image"]}').convert_alpha()
             image_resized = pygame.transform.scale(image, (140,140))
 
@@ -152,16 +183,40 @@ class Player:
             screen.blit(height_text, (i * 160 + 55, 835))
             screen.blit(weight_text, (i * 160 + 55, 855))
 
-    def check_click(self):
+    def select_card(self):
         mouse_pos = pygame.mouse.get_pos()
-        for card in self.card_rects:
-            if card.collidepoint(mouse_pos):
-                if pygame.mouse.get_pressed()[0]:
-                    self.card_clicked = True
-                else:
-                    if self.card_clicked == True:
-                        print(self.card_rects.index(card))
-                        self.card_clicked = False
+        if self.turn_to_choose_card == True:
+            for card in self.card_rects:
+                if card.collidepoint(mouse_pos):
+                    if pygame.mouse.get_pressed()[0] and self.cards[self.card_rects.index(card)]['used'] == False:
+                        self.card_clicked = True
+                    else:
+                        if self.card_clicked == True:
+                            self.card_clicked = False
+                            self.selected_card = self.card_rects.index(card)
+                            
+                            
+                        
+            
+    def select_attribute(self, index):
+        if self.turn_to_choose_attribute == True:
+            pressed = pygame.key.get_pressed()
+            if pressed[pygame.K_i]:
+                self.cards[index]['used'] = True
+                return ('id', self.cards[index]['id'])
+            elif pressed[pygame.K_h]:
+                self.cards[index]['used'] = True
+                return ('height', self.cards[index]['height'])
+            elif pressed[pygame.K_w]:
+                self.cards[index]['used'] = True
+                return ('weight', self.cards[index]['weight'])
+            
+            
+            
+                
+
+        
+
     
 
             
@@ -226,7 +281,7 @@ while running:
 
     # Screen and fps
 
-    screen.fill(BLACK)
+    screen.fill(black)
     main_game.draw_elements()
     clock.tick(fps)
 
