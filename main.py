@@ -49,6 +49,7 @@ class MAIN:
         self.pc = PC()
         self.deal_cards()
         self.game()
+        self.game_running = True
         #self.player_card = None
         #self.player_attribute = None
         
@@ -81,11 +82,14 @@ class MAIN:
     
     def game(self):
         if any(d['used'] == False for d in self.player.cards):
-            self.player_play_hand()
+            player_selection = self.player_play_hand()
+            if player_selection != None:
+                pc_selection = self.pc.choose_card(player_selection[0])
+                if pc_selection != None:
+                    print(player_selection)
+                    print(pc_selection)
         else:
-            print('game over')
-        
-
+            self.game_running = False
         
     
     def player_play_hand(self):
@@ -109,15 +113,16 @@ class MAIN:
             if self.player.selected_attribute != None:
                 self.player.turn_to_choose_attribute = False
                 print(self.player.selected_attribute)
-                self.player.selected_card = None
-                self.player.selected_attribute = None
-                self.player.turn_to_choose_card = True
-                return 
+                #self.player.selected_card = None
+                #self.player.selected_attribute = None
+                self.pc.turn = True
+                return self.player.selected_attribute
 
     
-    def pc_play_hand(self):
-        ...
-        return value
+    #def pc_play_hand(self):
+    #    if self.pc.turn == True:
+    #        self.pc.choose_card(self.player.selected_attribute[0])
+    #    return 
 
 
 
@@ -125,6 +130,8 @@ class PC:
     def __init__(self):
         self.cards = []
         self.card_rects = []
+        self.turn = False
+
         
     def draw(self, deck):
         for _ in range(7):
@@ -135,6 +142,14 @@ class PC:
         for i in range(7):
             card = pygame.draw.rect(screen, grey3, [i * 160 + 50, 125, 140, 240], border_radius = 12)
             self.card_rects.append(card)
+    
+    def choose_card(self, attribute_name):
+        selected_card = random.choice([x for x in self.cards if x['used'] != True])
+        selected_card_index = self.cards.index(selected_card)
+        self.cards[selected_card_index]['used'] = True
+        print(selected_card)
+        return attribute_name, selected_card[attribute_name]
+
 
 class Player: 
     def __init__(self):
@@ -196,8 +211,6 @@ class Player:
                             self.selected_card = self.card_rects.index(card)
                             
                             
-                        
-            
     def select_attribute(self, index):
         if self.turn_to_choose_attribute == True:
             pressed = pygame.key.get_pressed()
@@ -267,7 +280,6 @@ class Deck:
 
 main_game = MAIN()
 
-
 # Game loop
 running = True
 while running:
@@ -284,7 +296,7 @@ while running:
     screen.fill(black)
     main_game.draw_elements()
     clock.tick(fps)
-
-    main_game.game()
+    if main_game.game_running == True:
+        main_game.game()
 
     pygame.display.update()
