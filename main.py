@@ -48,12 +48,9 @@ class MAIN:
         self.player = Player()
         self.pc = PC()
         self.deal_cards()
-        self.game()
+        #self.game()
         self.game_running = True
-        #self.player_card = None
-        #self.player_attribute = None
-        
-    
+       
     def deal_cards(self):
         self.player.draw(self.deck)
         self.pc.draw(self.deck)
@@ -79,11 +76,11 @@ class MAIN:
         player_text_rect = pc_text.get_rect(center=(WIDTH/2, 910))
         screen.blit(player_text, player_text_rect)
         
-    
     def game(self):
         if any(d['used'] == False for d in self.player.cards):
-            player_selection = self.player_play_hand()
+            player_selection = self.player.play_hand()
             if player_selection != None:
+                self.pc.turn = True
                 pc_selection = self.pc.choose_card(player_selection[0])
                 if pc_selection != None:
                     print(player_selection)
@@ -91,48 +88,12 @@ class MAIN:
         else:
             self.game_running = False
         
-    
-    def player_play_hand(self):
-        if self.player.turn_to_choose_card == True:
-            instructions_text = titles_font.render('Your turn: select a card.', True, white)
-            screen.blit(instructions_text, (20, 960))
-        
-            self.player.select_card()
-            if self.player.selected_card != None:
-                self.player.turn_to_choose_card = False
-                print(self.player.selected_card)
-                self.player.turn_to_choose_attribute = True
-        
-
-        if self.player.turn_to_choose_attribute == True:        
-            instructions_text = titles_font.render('Which attribute would your like to use? Press i for id, w for weight or h for height.', True, white)
-            screen.blit(instructions_text, (20, 960))
-
-            self.player.selected_attribute = self.player.select_attribute(self.player.selected_card)
-
-            if self.player.selected_attribute != None:
-                self.player.turn_to_choose_attribute = False
-                print(self.player.selected_attribute)
-                #self.player.selected_card = None
-                #self.player.selected_attribute = None
-                self.pc.turn = True
-                return self.player.selected_attribute
-
-    
-    #def pc_play_hand(self):
-    #    if self.pc.turn == True:
-    #        self.pc.choose_card(self.player.selected_attribute[0])
-    #    return 
-
-
-
 class PC:
     def __init__(self):
         self.cards = []
         self.card_rects = []
         self.turn = False
 
-        
     def draw(self, deck):
         for _ in range(7):
             card = deck.deal()
@@ -147,7 +108,6 @@ class PC:
         selected_card = random.choice([x for x in self.cards if x['used'] != True])
         selected_card_index = self.cards.index(selected_card)
         self.cards[selected_card_index]['used'] = True
-        print(selected_card)
         return attribute_name, selected_card[attribute_name]
 
 
@@ -198,6 +158,28 @@ class Player:
             screen.blit(height_text, (i * 160 + 55, 835))
             screen.blit(weight_text, (i * 160 + 55, 855))
 
+    def play_hand(self):
+        if self.turn_to_choose_card == True:
+            instructions_text = titles_font.render('Your turn: select a card.', True, white)
+            screen.blit(instructions_text, (20, 960))
+        
+            self.select_card()
+            if self.selected_card != None:
+                self.turn_to_choose_card = False
+                self.turn_to_choose_attribute = True
+        
+        if self.turn_to_choose_attribute == True:        
+            instructions_text = titles_font.render('Which attribute would your like to use? Press i for id, w for weight or h for height.', True, white)
+            screen.blit(instructions_text, (20, 960))
+
+            self.selected_attribute = self.select_attribute(self.selected_card)
+
+            if self.selected_attribute != None:
+                self.turn_to_choose_attribute = False
+                #self.player.selected_card = None
+                #self.player.selected_attribute = None
+                return self.selected_attribute
+
     def select_card(self):
         mouse_pos = pygame.mouse.get_pos()
         if self.turn_to_choose_card == True:
@@ -209,8 +191,7 @@ class Player:
                         if self.card_clicked == True:
                             self.card_clicked = False
                             self.selected_card = self.card_rects.index(card)
-                            
-                            
+                                                
     def select_attribute(self, index):
         if self.turn_to_choose_attribute == True:
             pressed = pygame.key.get_pressed()
@@ -222,17 +203,7 @@ class Player:
                 return ('height', self.cards[index]['height'])
             elif pressed[pygame.K_w]:
                 self.cards[index]['used'] = True
-                return ('weight', self.cards[index]['weight'])
-            
-            
-            
-                
-
-        
-
-    
-
-            
+                return ('weight', self.cards[index]['weight'])     
 
 class Deck:
     def __init__(self):
@@ -296,6 +267,7 @@ while running:
     screen.fill(black)
     main_game.draw_elements()
     clock.tick(fps)
+
     if main_game.game_running == True:
         main_game.game()
 
