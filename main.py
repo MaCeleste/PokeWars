@@ -65,9 +65,10 @@ class MAIN:
         self.draw_background()
         self.player.draw_cards()
         self.pc.draw_cards()
-        self.pc.draw_selected_card()
         self.player.draw_selected_card()
+        self.pc.draw_selected_card()
         self.draw_score()
+        self.player.draw_instructions()
         self.draw_round_result()
         self.start_new_round()
 
@@ -101,8 +102,7 @@ class MAIN:
                     self.round_ended = True
                     
         else:
-            self.player.turn_to_choose_card = True
-            self.player.turn_to_choose_attribute = False
+            self.player.turn = True
             self.player.selected_card = None
             self.player.selected_attribute = None
             self.pc.turn = False
@@ -145,8 +145,7 @@ class MAIN:
                 pressed = pygame.key.get_pressed()
                 if pressed[pygame.K_s]:
                     print('ended pressed')
-                    self.player.turn_to_choose_card = True
-                    self.player.turn_to_choose_attribute = False
+                    self.player.turn = True
                     self.player.selected_card = None
                     self.player.selected_attribute = None
                     self.pc.turn = False
@@ -237,8 +236,7 @@ class Player:
         self.cards = []
         self.card_rects = []
         self.card_clicked = False
-        self.turn_to_choose_card = True
-        self.turn_to_choose_attribute = False
+        self.turn = True
         self.selected_card = None
         self.selected_attribute = None
         
@@ -255,7 +253,7 @@ class Player:
             card = pygame.Rect((i * 160 + 50, 670), (140, 240))
 
             mouse_pos = pygame.mouse.get_pos()
-            if card.collidepoint(mouse_pos) and self.turn_to_choose_card == True and self.cards[i]['used'] == False or self.turn_to_choose_attribute == True and self.selected_card == i:
+            if card.collidepoint(mouse_pos) and self.turn == True and self.cards[i]['used'] == False and self.selected_card == None or self.turn == True and self.selected_card == i:
                 pygame.draw.rect(screen, grey2, card, border_radius = 12)
             elif self.cards[i]['used'] == True:
                 pygame.draw.rect(screen, black, card)
@@ -281,30 +279,19 @@ class Player:
                 screen.blit(weight_text, (i * 160 + 55, 885))
 
     def play_hand(self):
-        if self.turn_to_choose_card == True:
-            instructions_text = titles_font.render('Your turn: select a card.', True, white)
-            screen.blit(instructions_text, (20, 965))
+        if self.turn == True and self.selected_card is None:
+            self.selected_card = self.select_card()
         
-            self.select_card()
-            if self.selected_card != None:
-                self.turn_to_choose_card = False
-                self.turn_to_choose_attribute = True
-        
-        if self.turn_to_choose_attribute == True:        
-            instructions_text = titles_font.render('Which attribute would your like to use? Press i for id, w for weight or h for height.', True, white)
-            screen.blit(instructions_text, (20, 965))
-
+        if self.turn == True and self.selected_card is not None:        
             self.selected_attribute = self.select_attribute(self.selected_card)
 
             if self.selected_attribute != None:
-                self.turn_to_choose_attribute = False
-                #self.player.selected_card = None
-                #self.player.selected_attribute = None
+                self.turn = False
                 return self.selected_attribute
 
     def select_card(self):
         mouse_pos = pygame.mouse.get_pos()
-        if self.turn_to_choose_card == True:
+        if self.turn == True and self.selected_card is None:
             for card in self.card_rects:
                 if card.collidepoint(mouse_pos):
                     if pygame.mouse.get_pressed()[0] and self.cards[self.card_rects.index(card)]['used'] == False:
@@ -312,10 +299,10 @@ class Player:
                     else:
                         if self.card_clicked == True:
                             self.card_clicked = False
-                            self.selected_card = self.card_rects.index(card)
+                            return self.card_rects.index(card)
                                                 
     def select_attribute(self, index):
-        if self.turn_to_choose_attribute == True:
+        if self.turn == True and self.selected_attribute is None:
             pressed = pygame.key.get_pressed()
             if pressed[pygame.K_i]:
                 self.cards[index]['used'] = True
@@ -326,6 +313,14 @@ class Player:
             elif pressed[pygame.K_w]:
                 self.cards[index]['used'] = True
                 return ('weight', self.cards[index]['weight'])     
+
+    def draw_instructions(self):
+        if self.turn == True and self.selected_card is None:
+            instructions_text = titles_font.render('Your turn: select a card.', True, white)
+            screen.blit(instructions_text, (20, 965))
+        elif self.turn == True and self.selected_attribute is None:        
+            instructions_text = titles_font.render('Which attribute would your like to use? Press i for id, w for weight or h for height.', True, white)
+            screen.blit(instructions_text, (20, 965))
 
     def draw_selected_card(self):
         if self.selected_attribute is not None:
@@ -413,6 +408,7 @@ while running:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+        
 
     # Screen and fps
 
