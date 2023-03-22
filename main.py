@@ -54,12 +54,12 @@ class MAIN:
         self.pc_score = 0
         self.round_winner = None
         self.round_ended = False
+        self.time_round_ended = 0
+        self.game_ended = False
        
     def deal_cards(self):
         self.player.draw(self.deck)
         self.pc.draw(self.deck)
-        print(self.player.cards)
-        print(self.pc.cards)
 
     def draw_elements(self):
         self.draw_background()
@@ -70,11 +70,13 @@ class MAIN:
         self.draw_score()
         self.player.draw_instructions()
         self.draw_round_result()
-        self.start_new_round()
+        self.draw_game_result()
+        
+    def update_timers(self):
+        self.check_if_round_ended()
 
     def draw_background(self):
         bottom_menu = pygame.draw.rect(screen, grey3, [0, 960, WIDTH, 40])
-
         pc_container = pygame.draw.rect(screen, white, [15, 10, 1175, 295], width = 1)
         pc_text = titles_font.render('PC', True, white)
         pc_text_rect = pc_text.get_rect(center=(WIDTH/2, 28))
@@ -92,32 +94,36 @@ class MAIN:
         screen.blit(score_text, score_rect)
     
     def game(self):
+        
         if any(d['used'] == False for d in self.player.cards):
-            player_selection = self.player.play_hand()
-            if player_selection != None:
-                self.pc.turn = True
-                pc_selection = self.pc.choose_card(player_selection[0])
-                if pc_selection != None:
-                    self.round_winner = self.set_round_winner(pc_selection, player_selection)
-                    self.round_ended = True
-                    
-        else:
             self.player.turn = True
-            self.player.selected_card = None
-            self.player.selected_attribute = None
-            self.pc.turn = False
-            self.pc.selected_card = None
-            self.pc.selected_attribute = None
-            self.round_winner = None
-            self.round_ended = False
-            self.draw_game_result()
+            self.player.play_hand()
+        
+            if self.player.turn == False:
+            
+                self.pc.turn = True
+                self.pc.play_hand(self.player.selected_attribute[0])
+                self.round_winner = self.set_round_winner(self.pc.selected_attribute, self.player.selected_attribute) 
+                self.time_round_ended = pygame.time.get_ticks()
+                self.round_ended = True
+                
+                
+        else:
+            
             self.game_running = False
+
+    def check_if_round_ended(self):
+        if self.round_ended == True:
+            current_time = pygame.time.get_ticks()
+            if current_time - self.time_round_ended >= 4000:
+                self.end_round()
+
+
 
     def set_round_winner(self, pc, player):
         if pc[1] > player[1]:
             self.pc_score += 1
             return 'pc'
-  
         elif pc[1] < player[1]:
             self.player_score += 1
             return 'player'
@@ -126,6 +132,7 @@ class MAIN:
             
     def draw_round_result(self):
         if self.round_winner is not None:
+            
             if self.round_winner == 'pc':
                 result_text = titles_font.render('PC won this round!', True, white)
             elif self.round_winner == 'player':
@@ -136,35 +143,28 @@ class MAIN:
             result_rect.center = (600, 615)
             screen.blit(result_text, result_rect)
 
-    def start_new_round(self):
-        if self.round_ended == True:
-            if any(d['used'] == False for d in self.player.cards):
-                instructions_text = titles_font.render('Press s to start the next round.', True, white)
-                screen.blit(instructions_text, (20, 965))
-                print('ended')
-                pressed = pygame.key.get_pressed()
-                if pressed[pygame.K_s]:
-                    print('ended pressed')
-                    self.player.turn = True
-                    self.player.selected_card = None
-                    self.player.selected_attribute = None
-                    self.pc.turn = False
-                    self.pc.selected_card = None
-                    self.pc.selected_attribute = None
-                    self.round_winner = None
-                    self.round_ended = False
+    def end_round(self):
+        self.player.turn = False
+        self.player.selected_card = None
+        self.player.selected_attribute = None
+        self.pc.turn = False
+        self.pc.selected_card = None
+        self.pc.selected_attribute = None
+        self.round_winner = None
+        self.round_ended = False
             
 
     def draw_game_result(self):
-        if self.player_score > self.pc_score:
-            result_text = titles_font.render('Congratulations! You won!', True, white)
-        elif self.round_winner == 'player':
-            result_text = titles_font.render('Bad luck! PC won.', True, white)
-        else:
-            result_text = titles_font.render('Tie!', True, white)
-        result_rect = result_text.get_rect()
-        result_rect.center = (600, 615)
-        screen.blit(result_text, result_rect)
+        if self.game_running == False:
+            if self.player_score > self.pc_score:
+                result_text = titles_font.render('Congratulations! You won!', True, white)
+            elif self.round_winner == 'player':
+                result_text = titles_font.render('Bad luck! PC won.', True, white)
+            else:
+                result_text = titles_font.render('Tie!', True, white)
+            result_rect = result_text.get_rect()
+            result_rect.center = (600, 615)
+            screen.blit(result_text, result_rect)
 
 
 class PC:
@@ -194,7 +194,7 @@ class PC:
         
             # Display text and images on card
 
-    def choose_card(self, attribute_name):
+    def play_hand(self, attribute_name):
         
         played_card = random.choice([x for x in self.cards if x['used'] != True])
         self.selected_card = self.cards.index(played_card)
@@ -230,13 +230,14 @@ class PC:
             attribute_text_rect = attribute_text.get_rect()
             attribute_text_rect.topleft = (795, 440)
             screen.blit(attribute_text, attribute_text_rect)
+            
 
 class Player: 
     def __init__(self):
         self.cards = []
         self.card_rects = []
         self.card_clicked = False
-        self.turn = True
+        self.turn = False
         self.selected_card = None
         self.selected_attribute = None
         
@@ -253,7 +254,7 @@ class Player:
             card = pygame.Rect((i * 160 + 50, 670), (140, 240))
 
             mouse_pos = pygame.mouse.get_pos()
-            if card.collidepoint(mouse_pos) and self.turn == True and self.cards[i]['used'] == False and self.selected_card == None or self.turn == True and self.selected_card == i:
+            if card.collidepoint(mouse_pos) and self.turn == True and self.cards[i]['used'] == False and self.selected_card == None or self.turn == True and self.selected_card == i and self.cards[i]['used'] == False:
                 pygame.draw.rect(screen, grey2, card, border_radius = 12)
             elif self.cards[i]['used'] == True:
                 pygame.draw.rect(screen, black, card)
@@ -282,12 +283,12 @@ class Player:
         if self.turn == True and self.selected_card is None:
             self.selected_card = self.select_card()
         
-        if self.turn == True and self.selected_card is not None:        
+        if self.turn == True and self.selected_card is not None and self.selected_attribute is None:       
             self.selected_attribute = self.select_attribute(self.selected_card)
-
-            if self.selected_attribute != None:
+            if self.selected_attribute is not None:
+                self.cards[self.selected_card]['used'] = True
                 self.turn = False
-                return self.selected_attribute
+            #return self.selected_attribute
 
     def select_card(self):
         mouse_pos = pygame.mouse.get_pos()
@@ -305,13 +306,10 @@ class Player:
         if self.turn == True and self.selected_attribute is None:
             pressed = pygame.key.get_pressed()
             if pressed[pygame.K_i]:
-                self.cards[index]['used'] = True
                 return ('id', self.cards[index]['id'])
             elif pressed[pygame.K_h]:
-                self.cards[index]['used'] = True
                 return ('height', self.cards[index]['height'])
             elif pressed[pygame.K_w]:
-                self.cards[index]['used'] = True
                 return ('weight', self.cards[index]['weight'])     
 
     def draw_instructions(self):
@@ -414,9 +412,12 @@ while running:
 
     screen.fill(black)
     main_game.draw_elements()
+    main_game.update_timers()
     clock.tick(fps)
-
+    
     if main_game.game_running == True:
         main_game.game()
+
+    
 
     pygame.display.update()
