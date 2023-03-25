@@ -53,9 +53,13 @@ class MAIN:
         self.player_score = 0
         self.pc_score = 0
         self.round_winner = None
-        self.round_ended = False
+
+
+
+
+
         self.time_round_ended = 0
-        self.game_ended = False
+        self.wait = False
        
     def deal_cards(self):
         self.player.draw(self.deck)
@@ -71,10 +75,7 @@ class MAIN:
         self.player.draw_instructions()
         self.draw_round_result()
         self.draw_game_result()
-        
-    def update_timers(self):
-        self.check_if_round_ended()
-
+    
     def draw_background(self):
         bottom_menu = pygame.draw.rect(screen, grey3, [0, 960, WIDTH, 40])
         pc_container = pygame.draw.rect(screen, white, [15, 10, 1175, 295], width = 1)
@@ -100,25 +101,23 @@ class MAIN:
             self.player.play_hand()
         
             if self.player.turn == False:
-            
                 self.pc.turn = True
                 self.pc.play_hand(self.player.selected_attribute[0])
                 self.round_winner = self.set_round_winner(self.pc.selected_attribute, self.player.selected_attribute) 
                 self.time_round_ended = pygame.time.get_ticks()
-                self.round_ended = True
-                
-                
+                self.wait = True
+                  
         else:
-            
+            pygame.time.delay(3000)
             self.game_running = False
 
-    def check_if_round_ended(self):
-        if self.round_ended == True:
+
+    def timer(self):
+        if self.wait == True:
             current_time = pygame.time.get_ticks()
-            if current_time - self.time_round_ended >= 4000:
+            if current_time - self.time_round_ended >= 3000:
+                self.wait = False
                 self.end_round()
-
-
 
     def set_round_winner(self, pc, player):
         if pc[1] > player[1]:
@@ -151,14 +150,12 @@ class MAIN:
         self.pc.selected_card = None
         self.pc.selected_attribute = None
         self.round_winner = None
-        self.round_ended = False
             
-
     def draw_game_result(self):
         if self.game_running == False:
             if self.player_score > self.pc_score:
                 result_text = titles_font.render('Congratulations! You won!', True, white)
-            elif self.round_winner == 'player':
+            elif self.player_score < self.pc_score:
                 result_text = titles_font.render('Bad luck! PC won.', True, white)
             else:
                 result_text = titles_font.render('Tie!', True, white)
@@ -356,7 +353,6 @@ class Deck:
         self.full_deck = []
         self.build_deck()
 
-    
     def build_deck(self):
         for _ in range(14):
 
@@ -407,17 +403,14 @@ while running:
             pygame.quit()
             sys.exit()
         
-
     # Screen and fps
 
     screen.fill(black)
     main_game.draw_elements()
-    main_game.update_timers()
+    main_game.timer()
     clock.tick(fps)
     
     if main_game.game_running == True:
         main_game.game()
-
-    
 
     pygame.display.update()
