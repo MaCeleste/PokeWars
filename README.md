@@ -2,14 +2,14 @@
 
 ## Description
 
-An exciting game of top trumps with Pokemon cards, developed in Python and Pygame
+An exciting game of top trumps with Pokemon cards, developed in Python and Pygame.
 
 ## Description
 
 This game retrieves data from the [PokeAPI](https://pokeapi.co/). The documentation is available [here](https://pokeapi.co/docs/v2).
 
 The Pokemon images are from [The Complete Pokemon Images Data Set](https://www.kaggle.com/datasets/arenagrenade/the-complete-pokemon-images-data-set) by 
-Rohan Asokan
+Rohan Asokan.
 
 ## Libraries
 
@@ -24,15 +24,16 @@ Rohan Asokan
 ```python main.py```
 
 Player and PC will be dealt 7 cards each.
-When the game starts, player will be asked to select a card.
+
+When the game starts, Player will be asked to select a card.
 
 ![Select card](https://i.imgur.com/RBWEPSQ.png)
 
-Next, they will be asked what attribute they would like to choose to play against PC's card.
+Next, Player will be asked what attribute they would like to choose to play against PC's hand.
 
 ![Select attribute](https://i.imgur.com/oMZcUzH.png)
 
-PC will then select a card. The values of the attribute selected by player will be compared. Whoever has the highest value, wins the round and 1 point will be added to their total score.
+Now it's PC's turn to select a card. The value of the attribute selected by Player will be compared to the value of the same attribute on PC's hand. Whoever has the highest value, wins the round and 1 point will be added to their total score.
 
 ![PC plays hand. Round winner announced](https://i.imgur.com/nZIudpK.png)
 
