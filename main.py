@@ -53,11 +53,6 @@ class MAIN:
         self.player_score = 0
         self.pc_score = 0
         self.round_winner = None
-
-
-
-
-
         self.time_round_ended = 0
         self.wait = False
        
@@ -95,22 +90,17 @@ class MAIN:
         screen.blit(score_text, score_rect)
     
     def game(self):
-        
         if any(d['used'] == False for d in self.player.cards):
             self.player.turn = True
             self.player.play_hand()
-        
             if self.player.turn == False:
                 self.pc.turn = True
                 self.pc.play_hand(self.player.selected_attribute[0])
                 self.round_winner = self.set_round_winner(self.pc.selected_attribute, self.player.selected_attribute) 
                 self.time_round_ended = pygame.time.get_ticks()
                 self.wait = True
-                  
         else:
-            pygame.time.delay(3000)
             self.game_running = False
-
 
     def timer(self):
         if self.wait == True:
@@ -131,7 +121,6 @@ class MAIN:
             
     def draw_round_result(self):
         if self.round_winner is not None:
-            
             if self.round_winner == 'pc':
                 result_text = titles_font.render('PC won this round!', True, white)
             elif self.round_winner == 'player':
@@ -160,9 +149,8 @@ class MAIN:
             else:
                 result_text = titles_font.render('Tie!', True, white)
             result_rect = result_text.get_rect()
-            result_rect.center = (600, 615)
+            result_rect.center = (600, 800)
             screen.blit(result_text, result_rect)
-
 
 class PC:
     def __init__(self):
@@ -178,9 +166,7 @@ class PC:
             self.cards.append(card)
     
     def draw_cards(self):
-
         # Render text and images to be displayed on the selected card
-        
         for i in range(7):
             card = pygame.Rect((i * 160 + 50, 50), (140, 240))
             self.card_rects.append(card)
@@ -188,8 +174,6 @@ class PC:
                 pygame.draw.rect(screen, black, card)
             else:
                 pygame.draw.rect(screen, grey3, card, border_radius = 12)
-        
-            # Display text and images on card
 
     def play_hand(self, attribute_name):
         
@@ -228,7 +212,6 @@ class PC:
             attribute_text_rect.topleft = (795, 440)
             screen.blit(attribute_text, attribute_text_rect)
             
-
 class Player: 
     def __init__(self):
         self.cards = []
@@ -247,9 +230,7 @@ class Player:
     def draw_cards(self):
         for i in range(7):
             # Draw a rect that will represent a card in the player's hand
-
             card = pygame.Rect((i * 160 + 50, 670), (140, 240))
-
             mouse_pos = pygame.mouse.get_pos()
             if card.collidepoint(mouse_pos) and self.turn == True and self.cards[i]['used'] == False and self.selected_card == None or self.turn == True and self.selected_card == i and self.cards[i]['used'] == False:
                 pygame.draw.rect(screen, grey2, card, border_radius = 12)
@@ -257,7 +238,6 @@ class Player:
                 pygame.draw.rect(screen, black, card)
             else:
                 pygame.draw.rect(screen, grey3, card, border_radius = 12)
-
             self.card_rects.append(card)
 
             # Render text and images to be displayed on the card
@@ -279,13 +259,11 @@ class Player:
     def play_hand(self):
         if self.turn == True and self.selected_card is None:
             self.selected_card = self.select_card()
-        
         if self.turn == True and self.selected_card is not None and self.selected_attribute is None:       
             self.selected_attribute = self.select_attribute(self.selected_card)
             if self.selected_attribute is not None:
                 self.cards[self.selected_card]['used'] = True
                 self.turn = False
-            #return self.selected_attribute
 
     def select_card(self):
         mouse_pos = pygame.mouse.get_pos()
@@ -320,7 +298,6 @@ class Player:
     def draw_selected_card(self):
         if self.selected_attribute is not None:
             selected_card = pygame.Rect((435, 340), (140, 240))
-            #selected_card.center = (400, 500)
             pygame.draw.rect(screen, grey2, selected_card, border_radius = 12)
 
             name_text = card_font.render(self.cards[self.selected_card]['name'].capitalize(), True, white)
@@ -346,7 +323,6 @@ class Player:
             attribute_text_rect.topright = (420, 440)
             screen.blit(attribute_text, attribute_text_rect)
 
-
 class Deck:
     def __init__(self):
         # A list that will contain a dictionary for each Pokemon card. Each dict will contain id, name, height, weight, image 
@@ -355,7 +331,6 @@ class Deck:
 
     def build_deck(self):
         for _ in range(14):
-
             pokemon = dict()
             # Select a random Pokemon id
             while True:
@@ -375,14 +350,12 @@ class Deck:
                     continue
             
             # Create a dictionary that will store Pokemon attributes
-
             pokemon['id'] = id
             pokemon['name'] = response['name']
             pokemon['height'] = response['height']
             pokemon['weight'] = response['weight']
             pokemon['image'] = f'{pokemon["name"]}.png'
             pokemon['used'] = False
-
             self.full_deck.append(pokemon)
 
     def deal(self):
