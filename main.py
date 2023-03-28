@@ -55,7 +55,8 @@ class MAIN:
         self.round_winner = None
         self.pc_wait = False
         self.end_round_wait = False
-       
+
+    # Deal seven cards to each player
     def deal_cards(self):
         self.player.draw(self.deck)
         self.pc.draw(self.deck)
@@ -73,6 +74,7 @@ class MAIN:
     
     def draw_background(self):
         bottom_menu = pygame.draw.rect(screen, grey3, [0, 960, WIDTH, 40])
+
         pc_container = pygame.draw.rect(screen, white, [15, 10, 1175, 295], width = 1)
         pc_text = titles_font.render('PC', True, white)
         pc_text_rect = pc_text.get_rect(center=(WIDTH/2, 28))
@@ -82,13 +84,15 @@ class MAIN:
         player_text = titles_font.render('Player', True, white)
         player_text_rect = pc_text.get_rect(center=(WIDTH/2, 930))
         screen.blit(player_text, player_text_rect)
-        
+    
+    # Draw player and PC total score on the bottom right corner of the screen
     def draw_score(self):
         score_text = titles_font.render(f'Player: {self.player_score} | PC: {self.pc_score}', True, white)
         score_rect = score_text.get_rect()
         score_rect.topright = (1180, 965)
         screen.blit(score_text, score_rect)
 
+    # Draw instructions on the bottom menu
     def draw_instructions(self):
         if self.player.turn == True:
             if self.player.selected_card is None and self.player.selected_attribute is None:
@@ -102,25 +106,21 @@ class MAIN:
                 instructions_text = titles_font.render('Waiting for PC to choose a card...', True, white)
                 screen.blit(instructions_text, (20, 965))
     
+    # Update main game logic
     def update(self):
-        self.game()
         self.player.check_played()
+        self.check_pc_turn()
         self.check_end_round()
+        self.pc_timer()
+        self.round_timer()
         #self.check_end_game()
 
-    def game(self):
+    # Check if player's turn is finished and if PC needs to select a card. If true, a timer is activated.
+    def check_pc_turn(self):
         if self.player.turn == False and self.pc.selected_attribute is None:
             self.pc_wait = True
-            
-    def check_end_round(self):
-        if self.pc.selected_attribute is not None:
 
-            self.end_round_wait = True
-            
-    def check_end_game(self):
-        if not any(d['used'] == False for d in self.pc.cards):
-            self.game_running = False
-
+    # Wait 3000ms and then PC selects a card. Then set round winner.
     def pc_timer(self):
         if self.pc_wait == True:
             current_time = pygame.time.get_ticks()
@@ -128,15 +128,8 @@ class MAIN:
                 self.pc_wait = False
                 self.pc.play_hand(self.player.selected_attribute[0])
                 self.round_winner = self.set_round_winner(self.pc.selected_attribute, self.player.selected_attribute)
-                
-    def round_timer(self):
-        if self.end_round_wait == True:
-            current_time = pygame.time.get_ticks()
-            if current_time - self.pc.time_played >= 3000:
-                
-                self.end_round_wait = False
-                self.reset_round()
-
+    
+    # Set winner and add 1 to their score
     def set_round_winner(self, pc, player):
         if pc[1] > player[1]:
             self.pc_score += 1
@@ -147,6 +140,20 @@ class MAIN:
         else:
             return 'tie'
 
+    # Check if pc's turn is finished. If true, a timer is activated.
+    def check_end_round(self):
+        if self.pc.selected_attribute is not None:
+            self.end_round_wait = True
+
+    # Wait 3000ms before resetting round.
+    def round_timer(self):
+        if self.end_round_wait == True:
+            current_time = pygame.time.get_ticks()
+            if current_time - self.pc.time_played >= 3000:
+                self.end_round_wait = False
+                self.reset_round()
+
+    # Reset round parameters.
     def reset_round(self):
         self.player.turn = True
         self.player.selected_card = None
@@ -155,6 +162,11 @@ class MAIN:
         self.pc.selected_card = None
         self.pc.selected_attribute = None
         self.round_winner = None
+
+    # Check if all cards have been used
+    def check_end_game(self):
+        if not any(d['used'] == False for d in self.pc.cards):
+            self.game_running = False
 
     def draw_round_result(self):
         if self.round_winner is not None:
@@ -391,8 +403,6 @@ while running:
 
     screen.fill(black)
     main_game.draw_elements()
-    main_game.pc_timer()
-    main_game.round_timer()
     clock.tick(fps)
     
     if main_game.game_running == True:
