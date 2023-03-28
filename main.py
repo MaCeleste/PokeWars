@@ -114,6 +114,7 @@ class MAIN:
             
     def check_end_round(self):
         if self.pc.selected_attribute is not None:
+
             self.end_round_wait = True
             
     def check_end_game(self):
@@ -126,12 +127,13 @@ class MAIN:
             if current_time - self.player.time_played >= 3000:
                 self.pc_wait = False
                 self.pc.play_hand(self.player.selected_attribute[0])
+                self.round_winner = self.set_round_winner(self.pc.selected_attribute, self.player.selected_attribute)
                 
     def round_timer(self):
         if self.end_round_wait == True:
             current_time = pygame.time.get_ticks()
-            if current_time - self.pc.time_played >= 3000:  
-                self.round_winner = self.set_round_winner(self.pc.selected_attribute, self.player.selected_attribute)
+            if current_time - self.pc.time_played >= 3000:
+                
                 self.end_round_wait = False
                 self.reset_round()
 
