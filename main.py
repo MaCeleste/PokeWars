@@ -53,8 +53,8 @@ class MAIN:
         self.player_score = 0
         self.pc_score = 0
         self.round_winner = None
-        self.time_round_ended = 0
-        self.wait = False
+        self.pc_wait = False
+        self.end_round_wait = False
        
     def deal_cards(self):
         self.player.draw(self.deck)
@@ -67,7 +67,7 @@ class MAIN:
         self.player.draw_selected_card()
         self.pc.draw_selected_card()
         self.draw_score()
-        self.player.draw_instructions()
+        self.draw_instructions()
         self.draw_round_result()
         self.draw_game_result()
     
@@ -88,26 +88,52 @@ class MAIN:
         score_rect = score_text.get_rect()
         score_rect.topright = (1180, 965)
         screen.blit(score_text, score_rect)
+
+    def draw_instructions(self):
+        if self.player.turn == True:
+            if self.player.selected_card is None and self.player.selected_attribute is None:
+                instructions_text = titles_font.render('Your turn: select a card.', True, white)
+                screen.blit(instructions_text, (20, 965))
+            elif self.player.selected_card is not None and self.player.selected_attribute is None:        
+                instructions_text = titles_font.render('Which attribute would your like to use? Press i for id, w for weight or h for height.', True, white)
+                screen.blit(instructions_text, (20, 965))
+        elif self.player.turn == False:
+            if self.pc.selected_attribute is None:
+                instructions_text = titles_font.render('Waiting for PC to choose a card...', True, white)
+                screen.blit(instructions_text, (20, 965))
     
+    def update(self):
+        self.game()
+        self.player.check_played()
+        self.check_end_round()
+        #self.check_end_game()
+
     def game(self):
-        if any(d['used'] == False for d in self.player.cards):
-            self.player.turn = True
-            self.player.play_hand()
-            if self.player.turn == False:
-                self.pc.turn = True
-                self.pc.play_hand(self.player.selected_attribute[0])
-                self.round_winner = self.set_round_winner(self.pc.selected_attribute, self.player.selected_attribute) 
-                self.time_round_ended = pygame.time.get_ticks()
-                self.wait = True
-        else:
+        if self.player.turn == False and self.pc.selected_attribute is None:
+            self.pc_wait = True
+            
+    def check_end_round(self):
+        if self.pc.selected_attribute is not None:
+            self.end_round_wait = True
+            
+    def check_end_game(self):
+        if not any(d['used'] == False for d in self.pc.cards):
             self.game_running = False
 
-    def timer(self):
-        if self.wait == True:
+    def pc_timer(self):
+        if self.pc_wait == True:
             current_time = pygame.time.get_ticks()
-            if current_time - self.time_round_ended >= 3000:
-                self.wait = False
-                self.end_round()
+            if current_time - self.player.time_played >= 3000:
+                self.pc_wait = False
+                self.pc.play_hand(self.player.selected_attribute[0])
+                
+    def round_timer(self):
+        if self.end_round_wait == True:
+            current_time = pygame.time.get_ticks()
+            if current_time - self.pc.time_played >= 3000:  
+                self.round_winner = self.set_round_winner(self.pc.selected_attribute, self.player.selected_attribute)
+                self.end_round_wait = False
+                self.reset_round()
 
     def set_round_winner(self, pc, player):
         if pc[1] > player[1]:
@@ -118,7 +144,16 @@ class MAIN:
             return 'player'
         else:
             return 'tie'
-            
+
+    def reset_round(self):
+        self.player.turn = True
+        self.player.selected_card = None
+        self.player.selected_attribute = None
+        self.pc.turn = False
+        self.pc.selected_card = None
+        self.pc.selected_attribute = None
+        self.round_winner = None
+
     def draw_round_result(self):
         if self.round_winner is not None:
             if self.round_winner == 'pc':
@@ -130,15 +165,6 @@ class MAIN:
             result_rect = result_text.get_rect()
             result_rect.center = (600, 615)
             screen.blit(result_text, result_rect)
-
-    def end_round(self):
-        self.player.turn = False
-        self.player.selected_card = None
-        self.player.selected_attribute = None
-        self.pc.turn = False
-        self.pc.selected_card = None
-        self.pc.selected_attribute = None
-        self.round_winner = None
             
     def draw_game_result(self):
         if self.game_running == False:
@@ -159,6 +185,7 @@ class PC:
         self.turn = False
         self.selected_card = None
         self.selected_attribute = None
+        self.time_played = 0
 
     def draw(self, deck):
         for _ in range(7):
@@ -176,15 +203,15 @@ class PC:
                 pygame.draw.rect(screen, grey3, card, border_radius = 12)
 
     def play_hand(self, attribute_name):
-        
         played_card = random.choice([x for x in self.cards if x['used'] != True])
         self.selected_card = self.cards.index(played_card)
         self.cards[self.selected_card]['used'] = True
+        self.time_played = pygame.time.get_ticks()
         self.selected_attribute = (attribute_name, played_card[attribute_name])
-        return self.selected_attribute
-    
+
+
     def draw_selected_card(self):
-        if self.turn == True:
+        if self.selected_attribute is not None:
             selected_card = pygame.Rect((625, 340), (140, 240))
             #selected_card.center = (400, 500)
             pygame.draw.rect(screen, grey2, selected_card, border_radius = 12)
@@ -217,11 +244,11 @@ class Player:
         self.cards = []
         self.card_rects = []
         self.card_clicked = False
-        self.turn = False
+        self.turn = True
         self.selected_card = None
         self.selected_attribute = None
+        self.time_played = 0
         
-    
     def draw(self, deck):
         for _ in range(7):
             card = deck.deal()
@@ -232,7 +259,7 @@ class Player:
             # Draw a rect that will represent a card in the player's hand
             card = pygame.Rect((i * 160 + 50, 670), (140, 240))
             mouse_pos = pygame.mouse.get_pos()
-            if card.collidepoint(mouse_pos) and self.turn == True and self.cards[i]['used'] == False and self.selected_card == None or self.turn == True and self.selected_card == i and self.cards[i]['used'] == False:
+            if card.collidepoint(mouse_pos) and self.turn == True and self.cards[i]['used'] == False and self.selected_card == None or self.turn == True and self.selected_card == i:
                 pygame.draw.rect(screen, grey2, card, border_radius = 12)
             elif self.cards[i]['used'] == True:
                 pygame.draw.rect(screen, black, card)
@@ -248,7 +275,7 @@ class Player:
             height_text = small_card_font.render(f'Height: {self.cards[i]["height"]}', True, white)
             weight_text = small_card_font.render(f'Weight: {self.cards[i]["weight"]}', True, white)
             
-            if self.cards[i]['used'] == False:
+            if self.cards[i]['used'] == False or self.cards[i]['used'] == True and self.selected_card == i and self.selected_attribute is None:
             # Display text and images on card
                 screen.blit(name_text, (i * 160 + 55, 675))
                 screen.blit(image_resized, (i * 160 + 50, 705))
@@ -256,44 +283,7 @@ class Player:
                 screen.blit(height_text, (i * 160 + 55, 865))
                 screen.blit(weight_text, (i * 160 + 55, 885))
 
-    def play_hand(self):
-        if self.turn == True and self.selected_card is None:
-            self.selected_card = self.select_card()
-        if self.turn == True and self.selected_card is not None and self.selected_attribute is None:       
-            self.selected_attribute = self.select_attribute(self.selected_card)
-            if self.selected_attribute is not None:
-                self.cards[self.selected_card]['used'] = True
-                self.turn = False
-
-    def select_card(self):
-        mouse_pos = pygame.mouse.get_pos()
-        if self.turn == True and self.selected_card is None:
-            for card in self.card_rects:
-                if card.collidepoint(mouse_pos):
-                    if pygame.mouse.get_pressed()[0] and self.cards[self.card_rects.index(card)]['used'] == False:
-                        self.card_clicked = True
-                    else:
-                        if self.card_clicked == True:
-                            self.card_clicked = False
-                            return self.card_rects.index(card)
-                                                
-    def select_attribute(self, index):
-        if self.turn == True and self.selected_attribute is None:
-            pressed = pygame.key.get_pressed()
-            if pressed[pygame.K_i]:
-                return ('id', self.cards[index]['id'])
-            elif pressed[pygame.K_h]:
-                return ('height', self.cards[index]['height'])
-            elif pressed[pygame.K_w]:
-                return ('weight', self.cards[index]['weight'])     
-
-    def draw_instructions(self):
-        if self.turn == True and self.selected_card is None:
-            instructions_text = titles_font.render('Your turn: select a card.', True, white)
-            screen.blit(instructions_text, (20, 965))
-        elif self.turn == True and self.selected_attribute is None:        
-            instructions_text = titles_font.render('Which attribute would your like to use? Press i for id, w for weight or h for height.', True, white)
-            screen.blit(instructions_text, (20, 965))
+    
 
     def draw_selected_card(self):
         if self.selected_attribute is not None:
@@ -322,6 +312,11 @@ class Player:
             attribute_text_rect = attribute_text.get_rect()
             attribute_text_rect.topright = (420, 440)
             screen.blit(attribute_text, attribute_text_rect)
+
+    def check_played(self):
+        if self.turn == True and self.selected_attribute is not None:
+            self.time_played = pygame.time.get_ticks()
+            self.turn = False
 
 class Deck:
     def __init__(self):
@@ -375,15 +370,30 @@ while running:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
-        
+        if event.type == pygame.MOUSEBUTTONUP:
+            if main_game.player.selected_card is None and main_game.player.selected_attribute is None:
+                for card in main_game.player.card_rects:
+                    if card.collidepoint(event.pos) and main_game.player.cards[main_game.player.card_rects.index(card)]['used'] == False:
+                        main_game.player.selected_card = main_game.player.card_rects.index(card)
+                        main_game.player.cards[main_game.player.selected_card]['used'] = True
+        if event.type == pygame.KEYDOWN:
+            if main_game.player.selected_card is not None and main_game.player.selected_attribute is None:
+                if event.key == pygame.K_i:
+                    main_game.player.selected_attribute = ('id', main_game.player.cards[main_game.player.selected_card]['id'])
+                if event.key == pygame.K_h:
+                    main_game.player.selected_attribute = ('height', main_game.player.cards[main_game.player.selected_card]['height'])
+                if event.key == pygame.K_w:
+                    main_game.player.selected_attribute = ('weight', main_game.player.cards[main_game.player.selected_card]['weight'])
+                    
     # Screen and fps
 
     screen.fill(black)
     main_game.draw_elements()
-    main_game.timer()
+    main_game.pc_timer()
+    main_game.round_timer()
     clock.tick(fps)
     
     if main_game.game_running == True:
-        main_game.game()
+        main_game.update()
 
     pygame.display.update()
