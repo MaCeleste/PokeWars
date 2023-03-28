@@ -153,7 +153,7 @@ class MAIN:
                 self.end_round_wait = False
                 self.reset_round()
 
-    # Reset round parameters.
+    # Reset round parameters and check if game should finish
     def reset_round(self):
         self.player.turn = True
         self.player.selected_card = None
@@ -162,6 +162,7 @@ class MAIN:
         self.pc.selected_card = None
         self.pc.selected_attribute = None
         self.round_winner = None
+        self.check_end_game()
 
     # Check if all cards have been used
     def check_end_game(self):
