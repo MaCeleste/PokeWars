@@ -17,10 +17,12 @@ white = (255, 255, 255)
 grey1 = (210,210,210)
 grey2 = (85, 85, 85)
 grey3 = (40, 40, 40)
+welcome_font = pygame.font.Font('Pokemon Solid.ttf', 80)
+end_font = pygame.font.Font('Pokemon Solid.ttf', 45)
 titles_font = pygame.font.Font('BarlowCondensed-Light.ttf', 25)
 card_font = pygame.font.Font('BarlowCondensed-Light.ttf', 20)
 small_card_font = pygame.font.Font('BarlowCondensed-Light.ttf', 18)
-small_card_font_selected = pygame.font.Font('BarlowCondensed-Bold.ttf', 18)
+#small_card_font_selected = pygame.font.Font('BarlowCondensed-Bold.ttf', 18)
 
 # Set caption and icon
 
@@ -52,7 +54,8 @@ class MAIN:
         self.round_winner = None
         self.pc_wait = False
         self.end_round_wait = False
-        self.game_over = False
+        self.game_over = None
+        self.loading = False
     
     def start_game(self):
         self.game_running = True
@@ -66,6 +69,7 @@ class MAIN:
         self.player = Player()
         self.pc = PC()
         self.deal_cards()
+        self.loading = False
 
     # Deal seven cards to each player
     def deal_cards(self):
@@ -85,7 +89,8 @@ class MAIN:
         else:
             self.draw_game_result()
             self.draw_start_screen()
-    
+            self.draw_loading()
+
     def draw_background(self):
         
         bottom_menu = pygame.draw.rect(screen, grey3, [0, 960, WIDTH, 40])
@@ -101,19 +106,26 @@ class MAIN:
         screen.blit(player_text, player_text_rect)
     
     def draw_start_screen(self):
+        if self.game_over == None:
+            welcome_text = welcome_font.render('Welcome to PokeWars!', True, white)
+            welcome_text_rect = welcome_text.get_rect(center=(600, 300))
+            screen.blit(welcome_text, welcome_text_rect)
+
         mouse_pos = pygame.mouse.get_pos()
-        start = pygame.Rect([450, 500, 140, 50])
+        start = pygame.Rect([450, 600, 140, 50])
         start_text = titles_font.render('New Game', True, white)
-        start_text_rect = start_text.get_rect(center=(520, 525))
+        start_text_rect = start_text.get_rect(center=(520, 625))
         if start.collidepoint(mouse_pos):
             pygame.draw.rect(screen, grey2, start, border_radius = 6)
+            if pygame.mouse.get_pressed()[0]:
+                self.loading = True
         else:
             pygame.draw.rect(screen, white, start, width = 1, border_radius = 6)
         screen.blit(start_text, start_text_rect)
 
-        quit = pygame.Rect([610, 500, 140, 50])
+        quit = pygame.Rect([610, 600, 140, 50])
         quit_text = titles_font.render('Quit', True, white)
-        quit_text_rect = quit_text.get_rect(center=(680, 525))
+        quit_text_rect = quit_text.get_rect(center=(680, 625))
         if quit.collidepoint(mouse_pos):
             pygame.draw.rect(screen, grey2, quit, border_radius = 6)
         else:
@@ -122,6 +134,12 @@ class MAIN:
 
         self.menu_buttons.append(start)
         self.menu_buttons.append(quit)
+    
+    def draw_loading(self):
+        if self.loading == True:
+            loading_text = titles_font.render('Loading...', True, white)
+            loading_text_rect = loading_text.get_rect(center=(600, 900))
+            screen.blit(loading_text, loading_text_rect)
 
     # Draw player and PC total score on the bottom right corner of the screen
     def draw_score(self):
@@ -161,7 +179,7 @@ class MAIN:
     def pc_timer(self):
         if self.pc_wait == True:
             current_time = pygame.time.get_ticks()
-            if current_time - self.player.time_played >= 3000:
+            if current_time - self.player.time_played >= 2000:
                 self.pc_wait = False
                 self.pc.play_hand(self.player.selected_attribute[0])
                 self.round_winner = self.set_round_winner(self.pc.selected_attribute, self.player.selected_attribute)
@@ -222,11 +240,11 @@ class MAIN:
     def draw_game_result(self):
         if self.game_running == False and self.game_over == True:
             if self.player_score > self.pc_score:
-                result_text = titles_font.render('Congratulations! You won!', True, white)
+                result_text = end_font.render('Congratulations! You won!', True, white)
             elif self.player_score < self.pc_score:
-                result_text = titles_font.render('Bad luck! PC won.', True, white)
+                result_text = end_font.render('Bad luck! PC won.', True, white)
             else:
-                result_text = titles_font.render('Tie!', True, white)
+                result_text = end_font.render('Tie!', True, white)
             result_rect = result_text.get_rect()
             result_rect.center = (600, 400)
             screen.blit(result_text, result_rect)
@@ -450,5 +468,4 @@ while running:
     
     if main_game.game_running == True:
         main_game.update()
-
     pygame.display.update()
