@@ -45,16 +45,27 @@ pokemon = requests.get('https://pokeapi.co/api/v2/pokemon').json()
 
 class MAIN:
     def __init__(self):
-        self.deck = Deck()
-        self.player = Player()
-        self.pc = PC()
-        self.deal_cards()
+        self.game_running = False
+        self.menu_buttons = []
+        self.player_score = 0
+        self.pc_score = 0
+        self.round_winner = None
+        self.pc_wait = False
+        self.end_round_wait = False
+        self.game_over = False
+    
+    def start_game(self):
         self.game_running = True
         self.player_score = 0
         self.pc_score = 0
         self.round_winner = None
         self.pc_wait = False
         self.end_round_wait = False
+        self.game_over = False
+        self.deck = Deck()
+        self.player = Player()
+        self.pc = PC()
+        self.deal_cards()
 
     # Deal seven cards to each player
     def deal_cards(self):
@@ -62,17 +73,21 @@ class MAIN:
         self.pc.draw(self.deck)
 
     def draw_elements(self):
-        self.draw_background()
-        self.player.draw_cards()
-        self.pc.draw_cards()
-        self.player.draw_selected_card()
-        self.pc.draw_selected_card()
-        self.draw_score()
-        self.draw_instructions()
-        self.draw_round_result()
-        self.draw_game_result()
+        if self.game_running == True:
+            self.draw_background()
+            self.player.draw_cards()
+            self.pc.draw_cards()
+            self.player.draw_selected_card()
+            self.pc.draw_selected_card()
+            self.draw_score()
+            self.draw_instructions()
+            self.draw_round_result()
+        else:
+            self.draw_game_result()
+            self.draw_start_screen()
     
     def draw_background(self):
+        
         bottom_menu = pygame.draw.rect(screen, grey3, [0, 960, WIDTH, 40])
 
         pc_container = pygame.draw.rect(screen, white, [15, 10, 1175, 295], width = 1)
@@ -82,9 +97,32 @@ class MAIN:
 
         player_container = pygame.draw.rect(screen, white, [15, 655, 1175, 295], width = 1)
         player_text = titles_font.render('Player', True, white)
-        player_text_rect = pc_text.get_rect(center=(WIDTH/2, 930))
+        player_text_rect = player_text.get_rect(center=(WIDTH/2, 930))
         screen.blit(player_text, player_text_rect)
     
+    def draw_start_screen(self):
+        mouse_pos = pygame.mouse.get_pos()
+        start = pygame.Rect([450, 500, 140, 50])
+        start_text = titles_font.render('New Game', True, white)
+        start_text_rect = start_text.get_rect(center=(520, 525))
+        if start.collidepoint(mouse_pos):
+            pygame.draw.rect(screen, grey2, start, border_radius = 6)
+        else:
+            pygame.draw.rect(screen, white, start, width = 1, border_radius = 6)
+        screen.blit(start_text, start_text_rect)
+
+        quit = pygame.Rect([610, 500, 140, 50])
+        quit_text = titles_font.render('Quit', True, white)
+        quit_text_rect = quit_text.get_rect(center=(680, 525))
+        if quit.collidepoint(mouse_pos):
+            pygame.draw.rect(screen, grey2, quit, border_radius = 6)
+        else:
+            pygame.draw.rect(screen, white, quit, width = 1, border_radius = 6)
+        screen.blit(quit_text, quit_text_rect)
+
+        self.menu_buttons.append(start)
+        self.menu_buttons.append(quit)
+
     # Draw player and PC total score on the bottom right corner of the screen
     def draw_score(self):
         score_text = titles_font.render(f'Player: {self.player_score} | PC: {self.pc_score}', True, white)
@@ -113,7 +151,6 @@ class MAIN:
         self.check_end_round()
         self.pc_timer()
         self.round_timer()
-        #self.check_end_game()
 
     # Check if player's turn is finished and if PC needs to select a card. If true, a timer is activated.
     def check_pc_turn(self):
@@ -167,6 +204,7 @@ class MAIN:
     # Check if all cards have been used
     def check_end_game(self):
         if not any(d['used'] == False for d in self.pc.cards):
+            self.game_over = True
             self.game_running = False
 
     def draw_round_result(self):
@@ -182,7 +220,7 @@ class MAIN:
             screen.blit(result_text, result_rect)
             
     def draw_game_result(self):
-        if self.game_running == False:
+        if self.game_running == False and self.game_over == True:
             if self.player_score > self.pc_score:
                 result_text = titles_font.render('Congratulations! You won!', True, white)
             elif self.player_score < self.pc_score:
@@ -190,7 +228,7 @@ class MAIN:
             else:
                 result_text = titles_font.render('Tie!', True, white)
             result_rect = result_text.get_rect()
-            result_rect.center = (600, 800)
+            result_rect.center = (600, 400)
             screen.blit(result_text, result_rect)
 
 class PC:
@@ -298,8 +336,6 @@ class Player:
                 screen.blit(height_text, (i * 160 + 55, 865))
                 screen.blit(weight_text, (i * 160 + 55, 885))
 
-    
-
     def draw_selected_card(self):
         if self.selected_attribute is not None:
             selected_card = pygame.Rect((435, 340), (140, 240))
@@ -386,6 +422,12 @@ while running:
             pygame.quit()
             sys.exit()
         if event.type == pygame.MOUSEBUTTONUP:
+            if main_game.game_running == False:
+                if main_game.menu_buttons[1].collidepoint(event.pos):
+                    pygame.quit()
+                    sys.exit()
+                if main_game.menu_buttons[0].collidepoint(event.pos):
+                    main_game.start_game()
             if main_game.player.selected_card is None and main_game.player.selected_attribute is None:
                 for card in main_game.player.card_rects:
                     if card.collidepoint(event.pos) and main_game.player.cards[main_game.player.card_rects.index(card)]['used'] == False:
@@ -399,7 +441,7 @@ while running:
                     main_game.player.selected_attribute = ('height', main_game.player.cards[main_game.player.selected_card]['height'])
                 if event.key == pygame.K_w:
                     main_game.player.selected_attribute = ('weight', main_game.player.cards[main_game.player.selected_card]['weight'])
-                    
+        
     # Screen and fps
 
     screen.fill(black)
