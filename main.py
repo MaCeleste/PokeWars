@@ -452,20 +452,22 @@ while running:
                 if main_game.menu_buttons[0].collidepoint(event.pos):
                     main_game.start_game()
             # Player select card
-            if main_game.player.selected_card is None and main_game.player.selected_attribute is None:
-                for card in main_game.player.card_rects:
-                    if card.collidepoint(event.pos) and main_game.player.cards[main_game.player.card_rects.index(card)]['used'] == False:
-                        main_game.player.selected_card = main_game.player.card_rects.index(card)
-                        main_game.player.cards[main_game.player.selected_card]['used'] = True
+            if main_game.game_running == True:
+                if main_game.player.selected_card is None and main_game.player.selected_attribute is None:
+                    for card in main_game.player.card_rects:
+                        if card.collidepoint(event.pos) and main_game.player.cards[main_game.player.card_rects.index(card)]['used'] == False:
+                            main_game.player.selected_card = main_game.player.card_rects.index(card)
+                            main_game.player.cards[main_game.player.selected_card]['used'] = True
         # Player select attribute
         if event.type == pygame.KEYDOWN:
-            if main_game.player.selected_card is not None and main_game.player.selected_attribute is None:
-                if event.key == pygame.K_i:
-                    main_game.player.selected_attribute = ('id', main_game.player.cards[main_game.player.selected_card]['id'])
-                if event.key == pygame.K_h:
-                    main_game.player.selected_attribute = ('height', main_game.player.cards[main_game.player.selected_card]['height'])
-                if event.key == pygame.K_w:
-                    main_game.player.selected_attribute = ('weight', main_game.player.cards[main_game.player.selected_card]['weight'])
+            if main_game.game_running == True:
+                if main_game.player.selected_card is not None and main_game.player.selected_attribute is None:
+                    if event.key == pygame.K_i:
+                        main_game.player.selected_attribute = ('id', main_game.player.cards[main_game.player.selected_card]['id'])
+                    if event.key == pygame.K_h:
+                        main_game.player.selected_attribute = ('height', main_game.player.cards[main_game.player.selected_card]['height'])
+                    if event.key == pygame.K_w:
+                        main_game.player.selected_attribute = ('weight', main_game.player.cards[main_game.player.selected_card]['weight'])
         
     # Screen and fps
     screen.fill(black)
