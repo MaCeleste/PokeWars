@@ -5,45 +5,40 @@ import requests
 import os.path
 
 # Initialise pygame
-
 pygame.init()
 
-# Game parameters
-
+# Screen parameters
 WIDTH = 1200
 HEIGHT = 1000
+
+# Create the screen
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+
+# Define FPS
+clock = pygame.time.Clock()
+fps = 60
+
+# Set caption and icon
+pygame.display.set_caption('PokeWars')
+icon = pygame.image.load('icon.png')
+pygame.display.set_icon(icon)
+
+# Colours 
 black = (0, 0, 0)
 white = (255, 255, 255)
 grey1 = (210,210,210)
 grey2 = (85, 85, 85)
 grey3 = (40, 40, 40)
+
+#Fonts
 welcome_font = pygame.font.Font('Pokemon Solid.ttf', 80)
 end_font = pygame.font.Font('Pokemon Solid.ttf', 45)
 titles_font = pygame.font.Font('BarlowCondensed-Light.ttf', 25)
 card_font = pygame.font.Font('BarlowCondensed-Light.ttf', 20)
 small_card_font = pygame.font.Font('BarlowCondensed-Light.ttf', 18)
-#small_card_font_selected = pygame.font.Font('BarlowCondensed-Bold.ttf', 18)
-
-# Set caption and icon
-
-pygame.display.set_caption('PokeWars')
-icon = pygame.image.load('icon.png')
-pygame.display.set_icon(icon)
-
-# Create the screen
-
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-
-# Define FPS
-
-clock = pygame.time.Clock()
-fps = 60
 
 # Retrieve Pokemon info from PokeAPI
-
 pokemon = requests.get('https://pokeapi.co/api/v2/pokemon').json()
-
-# Main game class
 
 class MAIN:
     def __init__(self):
@@ -57,6 +52,7 @@ class MAIN:
         self.game_over = None
         self.loading = False
     
+    # Reset game parameters and start new game
     def start_game(self):
         self.game_running = True
         self.player_score = 0
@@ -71,11 +67,12 @@ class MAIN:
         self.deal_cards()
         self.loading = False
 
-    # Deal seven cards to each player
+    # Deal cards to each player
     def deal_cards(self):
         self.player.draw(self.deck)
         self.pc.draw(self.deck)
 
+    # Screen elements
     def draw_elements(self):
         if self.game_running == True:
             self.draw_background()
@@ -92,7 +89,6 @@ class MAIN:
             self.draw_loading()
 
     def draw_background(self):
-        
         bottom_menu = pygame.draw.rect(screen, grey3, [0, 960, WIDTH, 40])
 
         pc_container = pygame.draw.rect(screen, white, [15, 10, 1175, 295], width = 1)
@@ -106,11 +102,13 @@ class MAIN:
         screen.blit(player_text, player_text_rect)
     
     def draw_start_screen(self):
+        # Draw welcome message when the program starts
         if self.game_over == None:
             welcome_text = welcome_font.render('Welcome to PokeWars!', True, white)
             welcome_text_rect = welcome_text.get_rect(center=(600, 300))
             screen.blit(welcome_text, welcome_text_rect)
 
+        # New game and quit buttons
         mouse_pos = pygame.mouse.get_pos()
         start = pygame.Rect([450, 600, 140, 50])
         start_text = titles_font.render('New Game', True, white)
@@ -135,6 +133,7 @@ class MAIN:
         self.menu_buttons.append(start)
         self.menu_buttons.append(quit)
     
+    # Loading message after player pressed "New Game" button
     def draw_loading(self):
         if self.loading == True:
             loading_text = titles_font.render('Loading...', True, white)
@@ -184,7 +183,7 @@ class MAIN:
                 self.pc.play_hand(self.player.selected_attribute[0])
                 self.round_winner = self.set_round_winner(self.pc.selected_attribute, self.player.selected_attribute)
     
-    # Set winner and add 1 to their score
+    # Set round winner and add one point to their score
     def set_round_winner(self, pc, player):
         if pc[1] > player[1]:
             self.pc_score += 1
@@ -225,6 +224,7 @@ class MAIN:
             self.game_over = True
             self.game_running = False
 
+    # Display round result
     def draw_round_result(self):
         if self.round_winner is not None:
             if self.round_winner == 'pc':
@@ -237,6 +237,7 @@ class MAIN:
             result_rect.center = (600, 615)
             screen.blit(result_text, result_rect)
             
+    # Display game result
     def draw_game_result(self):
         if self.game_running == False and self.game_over == True:
             if self.player_score > self.pc_score:
@@ -258,13 +259,21 @@ class PC:
         self.selected_attribute = None
         self.time_played = 0
 
+    # Assign cards to PC
     def draw(self, deck):
         for _ in range(7):
             card = deck.deal()
             self.cards.append(card)
     
+    # PC selects random card
+    def play_hand(self, attribute_name):
+        played_card = random.choice([x for x in self.cards if x['used'] != True])
+        self.selected_card = self.cards.index(played_card)
+        self.cards[self.selected_card]['used'] = True
+        self.time_played = pygame.time.get_ticks()
+        self.selected_attribute = (attribute_name, played_card[attribute_name])
+
     def draw_cards(self):
-        # Render text and images to be displayed on the selected card
         for i in range(7):
             card = pygame.Rect((i * 160 + 50, 50), (140, 240))
             self.card_rects.append(card)
@@ -273,18 +282,10 @@ class PC:
             else:
                 pygame.draw.rect(screen, grey3, card, border_radius = 12)
 
-    def play_hand(self, attribute_name):
-        played_card = random.choice([x for x in self.cards if x['used'] != True])
-        self.selected_card = self.cards.index(played_card)
-        self.cards[self.selected_card]['used'] = True
-        self.time_played = pygame.time.get_ticks()
-        self.selected_attribute = (attribute_name, played_card[attribute_name])
-
-
     def draw_selected_card(self):
+        # Once PC card and attribute are selected, draw selected card and render images and text
         if self.selected_attribute is not None:
             selected_card = pygame.Rect((625, 340), (140, 240))
-            #selected_card.center = (400, 500)
             pygame.draw.rect(screen, grey2, selected_card, border_radius = 12)
 
             name_text = card_font.render(self.cards[self.selected_card]['name'].capitalize(), True, white)
@@ -319,7 +320,8 @@ class Player:
         self.selected_card = None
         self.selected_attribute = None
         self.time_played = 0
-        
+
+    # Assign cards to PC
     def draw(self, deck):
         for _ in range(7):
             card = deck.deal()
@@ -347,7 +349,7 @@ class Player:
             weight_text = small_card_font.render(f'Weight: {self.cards[i]["weight"]}', True, white)
             
             if self.cards[i]['used'] == False or self.cards[i]['used'] == True and self.selected_card == i and self.selected_attribute is None:
-            # Display text and images on card
+            # Display text and images on  unused cards or selected card
                 screen.blit(name_text, (i * 160 + 55, 675))
                 screen.blit(image_resized, (i * 160 + 50, 705))
                 screen.blit(id_text, (i * 160 + 55, 845))
@@ -355,6 +357,7 @@ class Player:
                 screen.blit(weight_text, (i * 160 + 55, 885))
 
     def draw_selected_card(self):
+        # Once Player card and attribute are selected, draw selected card and render images and text
         if self.selected_attribute is not None:
             selected_card = pygame.Rect((435, 340), (140, 240))
             pygame.draw.rect(screen, grey2, selected_card, border_radius = 12)
@@ -382,6 +385,7 @@ class Player:
             attribute_text_rect.topright = (420, 440)
             screen.blit(attribute_text, attribute_text_rect)
 
+    # Check if Player has selected card and attribute and end Player turn
     def check_played(self):
         if self.turn == True and self.selected_attribute is not None:
             self.time_played = pygame.time.get_ticks()
@@ -389,18 +393,19 @@ class Player:
 
 class Deck:
     def __init__(self):
-        # A list that will contain a dictionary for each Pokemon card. Each dict will contain id, name, height, weight, image 
-        self.full_deck = []
+        # A list that will contain a dictionary for each Pokemon card. Each dict will contain id, name, height, weight, image. 
+        self.deck = []
         self.build_deck()
 
     def build_deck(self):
+        # Add 14 cards to deck
         for _ in range(14):
             pokemon = dict()
             # Select a random Pokemon id
             while True:
                 id = random.randint(1,898)
                 # Check if the id already exists in the deck. If it already exists, select a new id
-                if not any(d['id'] == id for d in self.full_deck):
+                if not any(d['id'] == id for d in self.deck):
                     # Retrive data from PokeAPI for the Pokemon corresponding to the selected id
                     # Check if there is an image available for the Pokemon with the id selected
                     response = requests.get(f'https://pokeapi.co/api/v2/pokemon/{id}').json()
@@ -420,13 +425,13 @@ class Deck:
             pokemon['weight'] = response['weight']
             pokemon['image'] = f'{pokemon["name"]}.png'
             pokemon['used'] = False
-            self.full_deck.append(pokemon)
+            self.deck.append(pokemon)
 
+    # Method called by PC and Player when cards are dealt
     def deal(self):
-        return self.full_deck.pop()
+        return self.deck.pop()
 
 # Create instance of a new game
-
 main_game = MAIN()
 
 # Game loop
@@ -434,23 +439,25 @@ running = True
 while running:
     
     # Event listener
-
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
         if event.type == pygame.MOUSEBUTTONUP:
+            # Start menu buttons
             if main_game.game_running == False:
                 if main_game.menu_buttons[1].collidepoint(event.pos):
                     pygame.quit()
                     sys.exit()
                 if main_game.menu_buttons[0].collidepoint(event.pos):
                     main_game.start_game()
+            # Player select card
             if main_game.player.selected_card is None and main_game.player.selected_attribute is None:
                 for card in main_game.player.card_rects:
                     if card.collidepoint(event.pos) and main_game.player.cards[main_game.player.card_rects.index(card)]['used'] == False:
                         main_game.player.selected_card = main_game.player.card_rects.index(card)
                         main_game.player.cards[main_game.player.selected_card]['used'] = True
+        # Player select attribute
         if event.type == pygame.KEYDOWN:
             if main_game.player.selected_card is not None and main_game.player.selected_attribute is None:
                 if event.key == pygame.K_i:
@@ -461,11 +468,12 @@ while running:
                     main_game.player.selected_attribute = ('weight', main_game.player.cards[main_game.player.selected_card]['weight'])
         
     # Screen and fps
-
     screen.fill(black)
     main_game.draw_elements()
     clock.tick(fps)
     
+    # Update game logic once game has started
     if main_game.game_running == True:
         main_game.update()
+
     pygame.display.update()
