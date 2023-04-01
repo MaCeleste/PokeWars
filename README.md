@@ -34,7 +34,7 @@ The value of the attribute selected by Player will be compared to the value of t
 
 The game will continue until all seven cards are played. The player with the highest total score wins. Player will have the possibility to start a new game or quit.
 
-![Game ends. Winner announced. Menu to restart the game or quit](https://i.imgur.com/ZtD0nrC.png)
+![Game ends. Winner announced. Menu to restart the game or quit](https://i.imgur.com/qw3aizw.png)
 
 ## Attributions
 
