@@ -14,6 +14,11 @@ HEIGHT = 1000
 # Create the screen
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
+# Start screen background
+bg_img = pygame.image.load('bg.jpg')
+bg_img = pygame.transform.scale(bg_img,(WIDTH, HEIGHT))
+
+
 # Define FPS
 clock = pygame.time.Clock()
 fps = 60
@@ -51,6 +56,7 @@ class MAIN:
         self.end_round_wait = False
         self.game_over = None
         self.loading = False
+        self.bg = 0
     
     # Reset game parameters and start new game
     def start_game(self):
@@ -75,7 +81,7 @@ class MAIN:
     # Screen elements
     def draw_elements(self):
         if self.game_running == True:
-            self.draw_background()
+            self.draw_board()
             self.player.draw_cards()
             self.pc.draw_cards()
             self.player.draw_selected_card()
@@ -88,7 +94,19 @@ class MAIN:
             self.draw_start_screen()
             self.draw_loading()
 
-    def draw_background(self):
+    def draw_backgroud(self):
+        if self.game_running == True:
+            screen.fill(black)
+        else:
+            screen.fill(black)
+            screen.blit(bg_img,(self.bg,0))
+            screen.blit(bg_img,(WIDTH+self.bg,0))
+            if (self.bg==-WIDTH):
+                screen.blit(bg_img,(WIDTH+self.bg,0))
+                self.bg=0
+            self.bg-=1
+
+    def draw_board(self):
         bottom_menu = pygame.draw.rect(screen, grey3, [0, 960, WIDTH, 40])
 
         pc_container = pygame.draw.rect(screen, white, [15, 10, 1175, 295], width = 1)
@@ -110,9 +128,9 @@ class MAIN:
 
         # New game and quit buttons
         mouse_pos = pygame.mouse.get_pos()
-        start = pygame.Rect([450, 600, 140, 50])
+        start = pygame.Rect([450, 750, 140, 50])
         start_text = titles_font.render('New Game', True, white)
-        start_text_rect = start_text.get_rect(center=(520, 625))
+        start_text_rect = start_text.get_rect(center=(520, 775))
         if start.collidepoint(mouse_pos):
             pygame.draw.rect(screen, grey2, start, border_radius = 6)
             if pygame.mouse.get_pressed()[0]:
@@ -121,9 +139,9 @@ class MAIN:
             pygame.draw.rect(screen, white, start, width = 1, border_radius = 6)
         screen.blit(start_text, start_text_rect)
 
-        quit = pygame.Rect([610, 600, 140, 50])
+        quit = pygame.Rect([610, 750, 140, 50])
         quit_text = titles_font.render('Quit', True, white)
-        quit_text_rect = quit_text.get_rect(center=(680, 625))
+        quit_text_rect = quit_text.get_rect(center=(680, 775))
         if quit.collidepoint(mouse_pos):
             pygame.draw.rect(screen, grey2, quit, border_radius = 6)
         else:
@@ -470,7 +488,8 @@ while running:
                         main_game.player.selected_attribute = ('weight', main_game.player.cards[main_game.player.selected_card]['weight'])
         
     # Screen and fps
-    screen.fill(black)
+    
+    main_game.draw_backgroud()
     main_game.draw_elements()
     clock.tick(fps)
     
