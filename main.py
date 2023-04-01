@@ -3,6 +3,8 @@ import sys
 import random
 import requests
 import os.path
+from pygame.locals import *
+from pygame import mixer
 
 # Initialise pygame
 pygame.init()
@@ -18,6 +20,10 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 bg_img = pygame.image.load('bg.jpg')
 bg_img = pygame.transform.scale(bg_img,(WIDTH, HEIGHT))
 
+#Start screen music
+mixer.init()
+mixer.music.load('music.ogg')
+mixer.music.play(-1)
 
 # Define FPS
 clock = pygame.time.Clock()
@@ -72,6 +78,7 @@ class MAIN:
         self.pc = PC()
         self.deal_cards()
         self.loading = False
+        pygame.mixer.music.fadeout(1000)
 
     # Deal cards to each player
     def deal_cards(self):
@@ -241,6 +248,7 @@ class MAIN:
         if not any(d['used'] == False for d in self.pc.cards):
             self.game_over = True
             self.game_running = False
+            pygame.mixer.music.play(-1)
 
     # Display round result
     def draw_round_result(self):
