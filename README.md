@@ -44,3 +44,5 @@ The Pokemon images are from [The Complete Pokemon Images Data Set](https://www.k
 Rohan Asokan.
 
 The background image for the start menu is by [Tati](https://www.vecteezy.com/members/tati-dsgn) at [vecteezy.com](https://www.vecteezy.com/).
+
+Music: [8-bit Dreamscape](https://www.youtube.com/watch?v=ACxt68Hrkvk&ab_channel=MusicLover%E2%80%93NoCopyrightMusic) by The Whole Other.

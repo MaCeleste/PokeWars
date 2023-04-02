@@ -20,10 +20,15 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 bg_img = pygame.image.load('bg.jpg')
 bg_img = pygame.transform.scale(bg_img,(WIDTH, HEIGHT))
 
-#Start screen music
+# Start screen music
 mixer.init()
-mixer.music.load('music.ogg')
+mixer.music.load('sounds/music.ogg')
 mixer.music.play(-1)
+
+# Load sound effects
+win_round = pygame.mixer.Sound('sounds/win_round.wav')
+lose_round = pygame.mixer.Sound('sounds/lose_round.wav')
+card_selected = pygame.mixer.Sound('sounds/selected.wav')
 
 # Define FPS
 clock = pygame.time.Clock()
@@ -42,11 +47,11 @@ grey2 = (85, 85, 85)
 grey3 = (40, 40, 40)
 
 #Fonts
-welcome_font = pygame.font.Font('Pokemon Solid.ttf', 80)
-end_font = pygame.font.Font('Pokemon Solid.ttf', 45)
-titles_font = pygame.font.Font('BarlowCondensed-Light.ttf', 25)
-card_font = pygame.font.Font('BarlowCondensed-Light.ttf', 20)
-small_card_font = pygame.font.Font('BarlowCondensed-Light.ttf', 18)
+welcome_font = pygame.font.Font('fonts/Pokemon Solid.ttf', 80)
+end_font = pygame.font.Font('fonts/Pokemon Solid.ttf', 45)
+titles_font = pygame.font.Font('fonts/BarlowCondensed-Light.ttf', 25)
+card_font = pygame.font.Font('fonts/BarlowCondensed-Light.ttf', 20)
+small_card_font = pygame.font.Font('fonts/BarlowCondensed-Light.ttf', 18)
 
 # Retrieve Pokemon info from PokeAPI
 pokemon = requests.get('https://pokeapi.co/api/v2/pokemon').json()
@@ -212,11 +217,14 @@ class MAIN:
     def set_round_winner(self, pc, player):
         if pc[1] > player[1]:
             self.pc_score += 1
+            pygame.mixer.Sound.play(lose_round)
             return 'pc'
         elif pc[1] < player[1]:
             self.player_score += 1
+            pygame.mixer.Sound.play(win_round)
             return 'player'
         else:
+            pygame.mixer.Sound.play(lose_round)
             return 'tie'
 
     # Check if pc's turn is finished. If true, a timer is activated.
@@ -318,7 +326,7 @@ class PC:
             id_text = small_card_font.render(f'ID: {self.cards[self.selected_card]["id"]}', True, white)
             height_text = small_card_font.render(f'Height: {self.cards[self.selected_card]["height"]}', True, white)
             weight_text = small_card_font.render(f'Weight: {self.cards[self.selected_card]["weight"]}', True, white)
-            image = pygame.image.load(f'images/{self.cards[self.selected_card]["image"]}').convert_alpha()
+            image = pygame.image.load(f'images/pokemon/{self.cards[self.selected_card]["image"]}').convert_alpha()
             image_resized = pygame.transform.scale(image, (140,140))
 
             screen.blit(name_text, (630, 345))
@@ -346,6 +354,7 @@ class Player:
         self.selected_card = None
         self.selected_attribute = None
         self.time_played = 0
+        self.sound_played = False
 
     # Assign cards to PC
     def draw(self, deck):
@@ -368,7 +377,7 @@ class Player:
 
             # Render text and images to be displayed on the card
             name_text = card_font.render(self.cards[i]['name'].capitalize(), True, white)
-            image = pygame.image.load(f'images/{self.cards[i]["image"]}').convert_alpha()
+            image = pygame.image.load(f'images/pokemon/{self.cards[i]["image"]}').convert_alpha()
             image_resized = pygame.transform.scale(image, (140,140))
             id_text = small_card_font.render(f'ID: {self.cards[i]["id"]}', True, white)
             height_text = small_card_font.render(f'Height: {self.cards[i]["height"]}', True, white)
@@ -392,7 +401,7 @@ class Player:
             id_text = small_card_font.render(f'ID: {self.cards[self.selected_card]["id"]}', True, white)
             height_text = small_card_font.render(f'Height: {self.cards[self.selected_card]["height"]}', True, white)
             weight_text = small_card_font.render(f'Weight: {self.cards[self.selected_card]["weight"]}', True, white)
-            image = pygame.image.load(f'images/{self.cards[self.selected_card]["image"]}').convert_alpha()
+            image = pygame.image.load(f'images/pokemon/{self.cards[self.selected_card]["image"]}').convert_alpha()
             image_resized = pygame.transform.scale(image, (140,140))
 
             screen.blit(name_text, (440, 345))
@@ -415,6 +424,7 @@ class Player:
     def check_played(self):
         if self.turn == True and self.selected_attribute is not None:
             self.time_played = pygame.time.get_ticks()
+            pygame.mixer.Sound.play(card_selected)
             self.turn = False
 
 class Deck:
@@ -435,7 +445,7 @@ class Deck:
                     # Retrive data from PokeAPI for the Pokemon corresponding to the selected id
                     # Check if there is an image available for the Pokemon with the id selected
                     response = requests.get(f'https://pokeapi.co/api/v2/pokemon/{id}').json()
-                    image_path = 'images/' + response["name"] + '.png'
+                    image_path = 'images/pokemon/' + response["name"] + '.png'
                     if os.path.isfile(image_path):
                         break
                     else:
@@ -500,6 +510,7 @@ while running:
     main_game.draw_backgroud()
     main_game.draw_elements()
     clock.tick(fps)
+    
     
     # Update game logic once game has started
     if main_game.game_running == True:
