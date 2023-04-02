@@ -17,7 +17,7 @@ HEIGHT = 1000
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
 # Start screen background
-bg_img = pygame.image.load('bg.jpg')
+bg_img = pygame.image.load('images/bg.jpg')
 bg_img = pygame.transform.scale(bg_img,(WIDTH, HEIGHT))
 
 # Start screen music
@@ -36,7 +36,7 @@ fps = 60
 
 # Set caption and icon
 pygame.display.set_caption('PokeWars')
-icon = pygame.image.load('icon.png')
+icon = pygame.image.load('images/icon.png')
 pygame.display.set_icon(icon)
 
 # Colours 
