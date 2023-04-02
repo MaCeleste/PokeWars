@@ -8,6 +8,7 @@ from pygame import mixer
 
 # Initialise pygame
 pygame.init()
+mixer.init()
 
 # Screen parameters
 WIDTH = 1200
@@ -21,7 +22,6 @@ bg_img = pygame.image.load('images/bg.jpg')
 bg_img = pygame.transform.scale(bg_img,(WIDTH, HEIGHT))
 
 # Start screen music
-mixer.init()
 mixer.music.load('sounds/music.ogg')
 mixer.music.play(-1)
 
