@@ -49,6 +49,7 @@ grey3 = (40, 40, 40)
 #Fonts
 welcome_font = pygame.font.Font('fonts/Pokemon Solid.ttf', 80)
 end_font = pygame.font.Font('fonts/Pokemon Solid.ttf', 45)
+instructions_font = pygame.font.Font('fonts/BarlowCondensed-LightItalic.ttf', 24)
 titles_font = pygame.font.Font('fonts/BarlowCondensed-Light.ttf', 25)
 card_font = pygame.font.Font('fonts/BarlowCondensed-Light.ttf', 20)
 small_card_font = pygame.font.Font('fonts/BarlowCondensed-Light.ttf', 18)
@@ -119,30 +120,30 @@ class MAIN:
             self.bg-=1
 
     def draw_board(self):
-        bottom_menu = pygame.draw.rect(screen, grey3, [0, 960, WIDTH, 40])
+        bottom_menu = pygame.draw.rect(screen, grey3, [0, 0, WIDTH, 40])
 
-        pc_container = pygame.draw.rect(screen, white, [15, 10, 1175, 295], width = 1)
+        pc_container = pygame.draw.rect(screen, white, [15, 50, 1175, 295], width = 1)
         pc_text = titles_font.render('PC', True, white)
-        pc_text_rect = pc_text.get_rect(center=(WIDTH/2, 28))
+        pc_text_rect = pc_text.get_rect(center=(WIDTH/2, 68))
         screen.blit(pc_text, pc_text_rect)
 
-        player_container = pygame.draw.rect(screen, white, [15, 655, 1175, 295], width = 1)
+        player_container = pygame.draw.rect(screen, white, [15, 695, 1175, 295], width = 1)
         player_text = titles_font.render('Player', True, white)
-        player_text_rect = player_text.get_rect(center=(WIDTH/2, 930))
+        player_text_rect = player_text.get_rect(center=(WIDTH/2, 970))
         screen.blit(player_text, player_text_rect)
     
     def draw_start_screen(self):
         # Draw welcome message when the program starts
         if self.game_over == None:
             welcome_text = welcome_font.render('Welcome to PokeWars!', True, white)
-            welcome_text_rect = welcome_text.get_rect(center=(600, 300))
+            welcome_text_rect = welcome_text.get_rect(center=(600, 200))
             screen.blit(welcome_text, welcome_text_rect)
 
         # New game and quit buttons
         mouse_pos = pygame.mouse.get_pos()
-        start = pygame.Rect([450, 750, 140, 50])
+        start = pygame.Rect([450, 650, 140, 50])
         start_text = titles_font.render('New Game', True, white)
-        start_text_rect = start_text.get_rect(center=(520, 775))
+        start_text_rect = start_text.get_rect(center=(520, 675))
         if start.collidepoint(mouse_pos):
             pygame.draw.rect(screen, grey2, start, border_radius = 6)
             if pygame.mouse.get_pressed()[0]:
@@ -151,9 +152,9 @@ class MAIN:
             pygame.draw.rect(screen, white, start, width = 1, border_radius = 6)
         screen.blit(start_text, start_text_rect)
 
-        quit = pygame.Rect([610, 750, 140, 50])
+        quit = pygame.Rect([610, 650, 140, 50])
         quit_text = titles_font.render('Quit', True, white)
-        quit_text_rect = quit_text.get_rect(center=(680, 775))
+        quit_text_rect = quit_text.get_rect(center=(680, 675))
         if quit.collidepoint(mouse_pos):
             pygame.draw.rect(screen, grey2, quit, border_radius = 6)
         else:
@@ -167,29 +168,29 @@ class MAIN:
     def draw_loading(self):
         if self.loading == True:
             loading_text = titles_font.render('Loading...', True, white)
-            loading_text_rect = loading_text.get_rect(center=(600, 900))
+            loading_text_rect = loading_text.get_rect(center=(600, 800))
             screen.blit(loading_text, loading_text_rect)
 
     # Draw player and PC total score on the bottom right corner of the screen
     def draw_score(self):
         score_text = titles_font.render(f'Player: {self.player_score} | PC: {self.pc_score}', True, white)
         score_rect = score_text.get_rect()
-        score_rect.topright = (1180, 965)
+        score_rect.topright = (1180, 5)
         screen.blit(score_text, score_rect)
 
     # Draw instructions on the bottom menu
     def draw_instructions(self):
         if self.player.turn == True:
             if self.player.selected_card is None and self.player.selected_attribute is None:
-                instructions_text = titles_font.render('Your turn: select a card.', True, white)
-                screen.blit(instructions_text, (20, 965))
+                instructions_text = instructions_font.render('Your turn: select a card.', True, white)
+                screen.blit(instructions_text, (20, 8))
             elif self.player.selected_card is not None and self.player.selected_attribute is None:        
-                instructions_text = titles_font.render('Which attribute would your like to use? Press i for id, w for weight or h for height.', True, white)
-                screen.blit(instructions_text, (20, 965))
+                instructions_text = instructions_font.render('Which attribute would your like to use? Press i for id, w for weight or h for height.', True, white)
+                screen.blit(instructions_text, (20, 8))
         elif self.player.turn == False:
             if self.pc.selected_attribute is None:
-                instructions_text = titles_font.render('Waiting for PC to choose a card...', True, white)
-                screen.blit(instructions_text, (20, 965))
+                instructions_text = instructions_font.render('Waiting for PC to choose a card...', True, white)
+                screen.blit(instructions_text, (20, 8))
     
     # Update main game logic
     def update(self):
@@ -268,7 +269,7 @@ class MAIN:
             else:
                 result_text = titles_font.render('Tie!', True, white)
             result_rect = result_text.get_rect()
-            result_rect.center = (600, 615)
+            result_rect.center = (600, 655)
             screen.blit(result_text, result_rect)
             
     # Display game result
@@ -288,6 +289,7 @@ class PC:
     def __init__(self):
         self.cards = []
         self.card_rects = []
+        self.create_card_rects()
         self.turn = False
         self.selected_card = None
         self.selected_attribute = None
@@ -307,10 +309,14 @@ class PC:
         self.time_played = pygame.time.get_ticks()
         self.selected_attribute = (attribute_name, played_card[attribute_name])
 
-    def draw_cards(self):
+    def create_card_rects(self):
         for i in range(7):
-            card = pygame.Rect((i * 160 + 50, 50), (140, 240))
+            card = pygame.Rect((i * 160 + 50, 90), (140, 240))
             self.card_rects.append(card)
+
+    def draw_cards(self):
+        for card in self.card_rects:   
+            i = self.card_rects.index(card)
             if self.cards[i]['used'] == True:
                 pygame.draw.rect(screen, black, card)
             else:
@@ -319,7 +325,7 @@ class PC:
     def draw_selected_card(self):
         # Once PC card and attribute are selected, draw selected card and render images and text
         if self.selected_attribute is not None:
-            selected_card = pygame.Rect((625, 340), (140, 240))
+            selected_card = pygame.Rect((625, 380), (140, 240))
             pygame.draw.rect(screen, grey2, selected_card, border_radius = 12)
 
             name_text = card_font.render(self.cards[self.selected_card]['name'].capitalize(), True, white)
@@ -329,26 +335,27 @@ class PC:
             image = pygame.image.load(f'images/pokemon/{self.cards[self.selected_card]["image"]}').convert_alpha()
             image_resized = pygame.transform.scale(image, (140,140))
 
-            screen.blit(name_text, (630, 345))
-            screen.blit(image_resized, (625, 375))
-            screen.blit(id_text, (630, 515))
-            screen.blit(height_text, (630, 535))
-            screen.blit(weight_text, (630, 555))
+            screen.blit(name_text, (630, 385))
+            screen.blit(image_resized, (625, 415))
+            screen.blit(id_text, (630, 555))
+            screen.blit(height_text, (630, 575))
+            screen.blit(weight_text, (630, 595))
 
             played_text = titles_font.render(f'PC played: {self.cards[self.selected_card]["name"].capitalize()}!', True, white)
             played_text_rect = played_text.get_rect()
-            played_text_rect.topleft = (795, 410)
+            played_text_rect.topleft = (795, 440)
             screen.blit(played_text, played_text_rect)
 
             attribute_text = titles_font.render(f'{self.selected_attribute[0].capitalize()}: {self.selected_attribute[1]}', True, white)
             attribute_text_rect = attribute_text.get_rect()
-            attribute_text_rect.topleft = (795, 440)
+            attribute_text_rect.topleft = (795, 480)
             screen.blit(attribute_text, attribute_text_rect)
             
 class Player: 
     def __init__(self):
         self.cards = []
         self.card_rects = []
+        self.create_card_rects()
         self.card_clicked = False
         self.turn = True
         self.selected_card = None
@@ -362,10 +369,16 @@ class Player:
             card = deck.deal()
             self.cards.append(card)
 
-    def draw_cards(self):
+    def create_card_rects(self):
         for i in range(7):
+            card = pygame.Rect((i * 160 + 50, 710), (140, 240))
+            self.card_rects.append(card)
+
+    def draw_cards(self):
+        for card in self.card_rects:
             # Draw a rect that will represent a card in the player's hand
-            card = pygame.Rect((i * 160 + 50, 670), (140, 240))
+            #card = pygame.Rect((i * 160 + 50, 670), (140, 240))
+            i = self.card_rects.index(card)
             mouse_pos = pygame.mouse.get_pos()
             if card.collidepoint(mouse_pos) and self.turn == True and self.cards[i]['used'] == False and self.selected_card == None or self.turn == True and self.selected_card == i:
                 pygame.draw.rect(screen, grey2, card, border_radius = 12)
@@ -373,7 +386,7 @@ class Player:
                 pygame.draw.rect(screen, black, card)
             else:
                 pygame.draw.rect(screen, grey3, card, border_radius = 12)
-            self.card_rects.append(card)
+            #self.card_rects.append(card)
 
             # Render text and images to be displayed on the card
             name_text = card_font.render(self.cards[i]['name'].capitalize(), True, white)
@@ -385,16 +398,16 @@ class Player:
             
             if self.cards[i]['used'] == False or self.cards[i]['used'] == True and self.selected_card == i and self.selected_attribute is None:
             # Display text and images on  unused cards or selected card
-                screen.blit(name_text, (i * 160 + 55, 675))
-                screen.blit(image_resized, (i * 160 + 50, 705))
-                screen.blit(id_text, (i * 160 + 55, 845))
-                screen.blit(height_text, (i * 160 + 55, 865))
-                screen.blit(weight_text, (i * 160 + 55, 885))
+                screen.blit(name_text, (i * 160 + 55, 715))
+                screen.blit(image_resized, (i * 160 + 50, 745))
+                screen.blit(id_text, (i * 160 + 55, 885))
+                screen.blit(height_text, (i * 160 + 55, 905))
+                screen.blit(weight_text, (i * 160 + 55, 925))
 
     def draw_selected_card(self):
         # Once Player card and attribute are selected, draw selected card and render images and text
         if self.selected_attribute is not None:
-            selected_card = pygame.Rect((435, 340), (140, 240))
+            selected_card = pygame.Rect((435, 380), (140, 240))
             pygame.draw.rect(screen, grey2, selected_card, border_radius = 12)
 
             name_text = card_font.render(self.cards[self.selected_card]['name'].capitalize(), True, white)
@@ -404,20 +417,20 @@ class Player:
             image = pygame.image.load(f'images/pokemon/{self.cards[self.selected_card]["image"]}').convert_alpha()
             image_resized = pygame.transform.scale(image, (140,140))
 
-            screen.blit(name_text, (440, 345))
-            screen.blit(image_resized, (435, 375))
-            screen.blit(id_text, (440, 515))
-            screen.blit(height_text, (440, 535))
-            screen.blit(weight_text, (440, 555))
+            screen.blit(name_text, (440, 385))
+            screen.blit(image_resized, (435, 415))
+            screen.blit(id_text, (440, 555))
+            screen.blit(height_text, (440, 575))
+            screen.blit(weight_text, (440, 595))
 
             played_text = titles_font.render(f'You played: {self.cards[self.selected_card]["name"].capitalize()}!', True, white)
             played_text_rect = played_text.get_rect()
-            played_text_rect.topright = (420, 410)
+            played_text_rect.topright = (420, 450)
             screen.blit(played_text, played_text_rect)
 
             attribute_text = titles_font.render(f'{self.selected_attribute[0].capitalize()}: {self.selected_attribute[1]}', True, white)
             attribute_text_rect = attribute_text.get_rect()
-            attribute_text_rect.topright = (420, 440)
+            attribute_text_rect.topright = (420, 480)
             screen.blit(attribute_text, attribute_text_rect)
 
     # Check if Player has selected card and attribute and end Player turn
@@ -504,13 +517,12 @@ while running:
                         main_game.player.selected_attribute = ('height', main_game.player.cards[main_game.player.selected_card]['height'])
                     if event.key == pygame.K_w:
                         main_game.player.selected_attribute = ('weight', main_game.player.cards[main_game.player.selected_card]['weight'])
-        
+
     # Screen and fps
     
     main_game.draw_backgroud()
     main_game.draw_elements()
     clock.tick(fps)
-    
     
     # Update game logic once game has started
     if main_game.game_running == True:
