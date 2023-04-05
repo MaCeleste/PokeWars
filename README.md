@@ -4,6 +4,10 @@
 
 An exciting game of top trumps with Pokemon cards, developed in Python and [Pygame](https://www.pygame.org/docs/), using [PokeAPI](https://pokeapi.co/).
 
+## Video Demo
+
+https://user-images.githubusercontent.com/25624513/230184683-03018c73-9155-43e3-91ce-3ca92511f3ca.mp4
+
 ## Gameplay and screenshots
 
 ```python main.py```
