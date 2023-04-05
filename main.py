@@ -183,14 +183,14 @@ class MAIN:
         if self.player.turn == True:
             if self.player.selected_card is None and self.player.selected_attribute is None:
                 instructions_text = instructions_font.render('Your turn: select a card.', True, white)
-                screen.blit(instructions_text, (20, 8))
+                screen.blit(instructions_text, (20, 6))
             elif self.player.selected_card is not None and self.player.selected_attribute is None:        
                 instructions_text = instructions_font.render('Which attribute would your like to use? Press i for id, w for weight or h for height.', True, white)
-                screen.blit(instructions_text, (20, 8))
+                screen.blit(instructions_text, (20, 6))
         elif self.player.turn == False:
             if self.pc.selected_attribute is None:
                 instructions_text = instructions_font.render('Waiting for PC to choose a card...', True, white)
-                screen.blit(instructions_text, (20, 8))
+                screen.blit(instructions_text, (20, 6))
     
     # Update main game logic
     def update(self):
