@@ -47,12 +47,12 @@ grey2 = (85, 85, 85)
 grey3 = (40, 40, 40)
 
 #Fonts
-welcome_font = pygame.font.Font('fonts/Pokemon Solid.ttf', 80)
-end_font = pygame.font.Font('fonts/Pokemon Solid.ttf', 45)
-instructions_font = pygame.font.Font('fonts/BarlowCondensed-LightItalic.ttf', 24)
-titles_font = pygame.font.Font('fonts/BarlowCondensed-Light.ttf', 25)
-card_font = pygame.font.Font('fonts/BarlowCondensed-Light.ttf', 20)
-small_card_font = pygame.font.Font('fonts/BarlowCondensed-Light.ttf', 18)
+welcome_font = pygame.font.Font('https://raw.githubusercontent.com/MaCeleste/PokeWars/main/fonts/Pokemon%20Solid.ttf', 80)
+end_font = pygame.font.Font('https://raw.githubusercontent.com/MaCeleste/PokeWars/main/fonts/Pokemon%20Solid.ttf',45)
+instructions_font = pygame.font.Font('https://raw.githubusercontent.com/MaCeleste/PokeWars/main/fonts/BarlowCondensed-LightItalic.ttf', 24)
+titles_font = pygame.font.Font('https://raw.githubusercontent.com/MaCeleste/PokeWars/main/fonts/BarlowCondensed-Light.ttf', 25)
+card_font = pygame.font.Font('https://raw.githubusercontent.com/MaCeleste/PokeWars/main/fonts/BarlowCondensed-Light.ttf', 20)
+small_card_font = pygame.font.Font('https://raw.githubusercontent.com/MaCeleste/PokeWars/main/fonts/BarlowCondensed-Light.ttf', 18)
 
 # Retrieve Pokemon info from PokeAPI
 pokemon = requests.get('https://pokeapi.co/api/v2/pokemon').json()
